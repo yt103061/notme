@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react';
 import type { GameState } from '../engine/game';
+import type { Card } from '../engine/cards';
+import type { HandRank } from '../engine/evaluator';
 import { CardView } from './CardView';
 import { FlipCard } from './FlipCard';
 import { Confetti } from './Confetti';
 import { sfx } from '../audio/sfx';
 import * as S from '../strings';
+
+/** 役に採用された4枚に含まれるか。役確定後、使わなかった1枚を暗く表示するために使う */
+function usesCard(rank: HandRank | undefined, card: Card): boolean {
+  if (!rank) return true;
+  return rank.usedCards.some((u) => u.suit === card.suit && u.rank === card.rank);
+}
 
 interface ShowdownRevealProps {
   state: GameState;
@@ -111,6 +119,7 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
             ))}
             <span className="showdown__communityLabel">場札</span>
           </div>
+          {step >= 4 && <p className="showdown__unusedNote">{S.SHOWDOWN_UNUSED_NOTE}</p>}
 
           <div className="showdown__opponents">
             {opponents.map((p, oi) => {
@@ -134,14 +143,20 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
                     {step >= 4 && isWinner && <span className="showdown__winnerBadge">WIN</span>}
                   </div>
                   <div className="showdown__cards">
-                    <FlipCard card={p.hole[0]} revealed={step >= 1} size="sm" delayMs={oi * 180} />
-                    <FlipCard
-                      card={p.hole[1]}
-                      revealed={step >= 1}
-                      size="sm"
-                      delayMs={oi * 180 + 90}
-                    />
-                    <CardView card={p.notMe} variant="faceUp" size="sm" highlighted />
+                    <div className={step >= 4 && !usesCard(rank, p.hole[0]) ? 'showdown__unused' : ''}>
+                      <FlipCard card={p.hole[0]} revealed={step >= 1} size="sm" delayMs={oi * 180} />
+                    </div>
+                    <div className={step >= 4 && !usesCard(rank, p.hole[1]) ? 'showdown__unused' : ''}>
+                      <FlipCard
+                        card={p.hole[1]}
+                        revealed={step >= 1}
+                        size="sm"
+                        delayMs={oi * 180 + 90}
+                      />
+                    </div>
+                    <div className={step >= 4 && !usesCard(rank, p.notMe) ? 'showdown__unused' : ''}>
+                      <CardView card={p.notMe} variant="faceUp" size="sm" highlighted />
+                    </div>
                   </div>
                   {step >= 4 && (
                     <span
@@ -163,14 +178,38 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
                 {S.YOUR_NOT_ME_REVEAL}
               </p>
               <div className="showdown__cards showdown__cards--you">
-                <CardView card={human.hole[0]} variant="faceUp" size="md" />
-                <CardView card={human.hole[1]} variant="faceUp" size="md" />
-                <FlipCard
-                  card={human.notMe}
-                  revealed={step >= 3}
-                  size="lg"
-                  glow={step === 2 || step >= 3}
-                />
+                <div
+                  className={
+                    step >= 4 && !usesCard(result.ranks[human.id], human.hole[0])
+                      ? 'showdown__unused'
+                      : ''
+                  }
+                >
+                  <CardView card={human.hole[0]} variant="faceUp" size="md" />
+                </div>
+                <div
+                  className={
+                    step >= 4 && !usesCard(result.ranks[human.id], human.hole[1])
+                      ? 'showdown__unused'
+                      : ''
+                  }
+                >
+                  <CardView card={human.hole[1]} variant="faceUp" size="md" />
+                </div>
+                <div
+                  className={
+                    step >= 4 && !usesCard(result.ranks[human.id], human.notMe)
+                      ? 'showdown__unused'
+                      : ''
+                  }
+                >
+                  <FlipCard
+                    card={human.notMe}
+                    revealed={step >= 3}
+                    size="lg"
+                    glow={step === 2 || step >= 3}
+                  />
+                </div>
               </div>
               {step >= 4 && result.ranks[human.id] && (
                 <div className="showdown__youVerdict">

@@ -210,8 +210,8 @@ describe('resolveShowdown', () => {
   }
 
   it('awards +2 to sole winner and -1 to remaining loser', () => {
-    const winner = basePlayer(0, [c('S', 14), c('S', 13)], c('S', 12)); // high card A,K,Q high
-    const loser = basePlayer(1, [c('H', 2), c('H', 3)], c('H', 4)); // high card 9 high
+    const winner = basePlayer(0, [c('S', 14), c('S', 13)], c('S', 12)); // ハイカード A,K,Q,9
+    const loser = basePlayer(1, [c('H', 2), c('H', 3)], c('H', 8)); // ハイカード 9,8,5,3（ストレートもフラッシュも無し）
     const community = [c('D', 5), c('C', 9)];
     const state = stateWith([winner, loser], community);
     const { state: next, result } = resolveShowdown(state);
@@ -223,7 +223,7 @@ describe('resolveShowdown', () => {
 
   it('folded players are excluded from scoring', () => {
     const winner = basePlayer(0, [c('S', 14), c('S', 13)], c('S', 12));
-    const loser = basePlayer(1, [c('H', 2), c('H', 3)], c('H', 4));
+    const loser = basePlayer(1, [c('H', 2), c('H', 3)], c('H', 8));
     const folded = basePlayer(2, [c('C', 6), c('C', 7)], c('C', 8));
     folded.folded = true;
     const community = [c('D', 5), c('C', 9)];

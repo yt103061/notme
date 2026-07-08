@@ -1,48 +1,48 @@
 /* ============================================================
    not me — design system
-   「リキッドグラス × 近未来」
-   複数レイヤーの半透明ガラス（blur+saturate+鏡面ハイライト）越しに
-   カラフルな環境光がにじむ、光を content とする UI
+   「真夜中の隠し部屋」
+   タングステン灯の光だまりに浮かぶ深緑のフェルト、クリーム紙のカード、
+   真鍮とオックスブラッドの差し色、明朝体の見出し、フィルムグレイン。
+   ガラスやネオンには頼らず、手触りのある「場」を作る。
    ============================================================ */
 
 :root {
-  --bg-deep: #050710;
-  --bg: #0a0d1a;
-  --ink: #f3f5fb;
-  --ink-dim: #9aa3c4;
-  --gold: #d9a83f;
-  --gold-hi: #ffe3a3;
-  --gold-deep: #a87b22;
-  --blue: #6fb2ff;
-  --teal: #5be3c5;
-  --magenta: #ff8fd6;
-  --danger: #ff6b7a;
-  --success: #52e0a8;
-  --card-bg: #fcfaf4;
-  --card-red: #c22e4d;
-  --card-black: #202538;
+  /* 部屋 */
+  --room: #0d0806;
+  --room-warm: rgba(255, 186, 108, 0.09);
+  /* フェルト */
+  --felt: #17402d;
+  --felt-deep: #0c2619;
+  /* 紙とインク */
+  --paper: #f2e9d5;
+  --paper-warm: #e9dec4;
+  --paper-ink: #2b2115;
+  --ink: #ece2cd;
+  --ink-dim: #a4917a;
+  /* 真鍮 */
+  --brass: #c29a5e;
+  --brass-hi: #e8cf9e;
+  --brass-deep: #8a6a38;
+  /* オックスブラッド（赤系） */
+  --oxblood: #6a2723;
+  --oxblood-deep: #451714;
+  --danger: #c96a5d;
+  --success: #8fb27f;
+  /* カード */
+  --card-red: #9e2f26;
+  --card-black: #29221a;
 
-  --radius: 24px;
-  --radius-sm: 17px;
-  --grad-gold: linear-gradient(135deg, #ffe3a3 0%, #d9a83f 55%, #b8862e 100%);
+  --radius: 14px;
+  --radius-sm: 10px;
 
-  /* ガラス共通トークン。斜めのハイライト（sheen）を背景レイヤーとして焼き込む方式にし、
-     擬似要素の重なり順でテキストが隠れる問題を避ける */
-  --glass-blur: 22px;
-  --glass-sat: 200%;
-  --glass-sheen: linear-gradient(118deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 16%, transparent 34%);
-  --glass-fill: var(--glass-sheen),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 55%, rgba(255, 255, 255, 0.06));
-  --glass-fill-strong: var(--glass-sheen),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.06) 55%, rgba(255, 255, 255, 0.1));
-  --glass-border: rgba(255, 255, 255, 0.32);
-  --glass-shadow: 0 14px 36px rgba(2, 4, 12, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -14px 22px rgba(2, 4, 12, 0.22);
-  --shadow-panel: var(--glass-shadow);
-  --line: rgba(255, 255, 255, 0.14);
-  --line-gold: rgba(255, 227, 163, 0.55);
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface-strong: rgba(255, 255, 255, 0.1);
+  --hairline: rgba(194, 154, 94, 0.28);
+  --hairline-bright: rgba(232, 207, 158, 0.5);
+  --line: rgba(236, 226, 205, 0.12);
+
+  --font-display: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+
+  /* 紙・フェルトの質感（微細ノイズ） */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
 }
 
 * {
@@ -55,30 +55,33 @@ body {
   padding: 0;
   min-height: 100%;
   color: var(--ink);
-  font-family: 'Avenir Next', 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
-    'Noto Sans JP', system-ui, sans-serif;
+  font-family: var(--font-display);
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background:
-    radial-gradient(52% 42% at 16% 10%, rgba(111, 178, 255, 0.32), transparent 62%),
-    radial-gradient(48% 40% at 88% 6%, rgba(217, 168, 63, 0.3), transparent 60%),
-    radial-gradient(55% 48% at 46% 102%, rgba(91, 227, 197, 0.24), transparent 65%),
-    radial-gradient(42% 36% at 94% 82%, rgba(255, 143, 214, 0.16), transparent 62%),
-    var(--bg-deep);
-  background-repeat: no-repeat;
-  background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 100% 100%;
-  animation: blobDrift 28s ease-in-out infinite alternate;
+  background: radial-gradient(90% 40% at 50% 0%, var(--room-warm), transparent 70%), var(--room);
 }
-@keyframes blobDrift {
-  0% {
-    background-position: 0% 0%, 100% 0%, 30% 100%, 100% 100%, 0 0;
-  }
-  100% {
-    background-position: 10% 12%, 90% 8%, 42% 90%, 86% 88%, 0 0;
-  }
+
+/* ビネット（周辺減光）とフィルムグレイン。すべての画面の上に薄く乗せて、
+   映画のワンシーンのような統一感を出す */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 42%, transparent 52%, rgba(5, 3, 1, 0.55) 100%);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2001;
+  pointer-events: none;
+  background: var(--noise);
+  opacity: 0.055;
 }
 
 #root {
@@ -92,25 +95,37 @@ body {
   max-width: 520px;
   margin: 0 auto;
   position: relative;
-  background: linear-gradient(180deg, rgba(5, 7, 16, 0.32) 0%, rgba(5, 7, 16, 0.58) 100%);
+}
+
+/* テーブルのフェルト。画面中央にタングステン灯の光だまりとして敷く */
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(85% 42% at 50% 40%, rgba(255, 196, 120, 0.07), transparent 65%),
+    radial-gradient(115% 60% at 50% 46%, var(--felt) 0%, #113021 40%, var(--felt-deep) 56%, rgba(12, 38, 25, 0) 74%);
+}
+.app > * {
+  position: relative;
+  z-index: 1;
 }
 
 .app__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 10px;
+  padding: 16px 18px 10px;
 }
 
 .app__brand {
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  font-size: 1.05rem;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  font-size: 1.02rem;
+  color: var(--brass-hi);
 }
 
 .app__main {
@@ -122,76 +137,77 @@ body {
 
 .app__log {
   min-height: 58px;
-  padding: 10px 6px;
-  font-size: 0.74rem;
+  padding: 10px 8px;
+  font-size: 0.72rem;
   color: var(--ink-dim);
   display: flex;
   flex-direction: column;
   gap: 3px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
 }
 
 .app__logLine {
-  opacity: 0.8;
+  opacity: 0.85;
+}
+.app__logLine::before {
+  content: '― ';
+  color: var(--brass-deep);
 }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons ----------
+   ガラスではなく「漆塗りの盤面に真鍮の縁」。押すと沈む物理的なボタン */
 
 .btn {
-  border: none;
-  border-radius: 999px;
-  padding: 13px 22px;
+  font-family: var(--font-display);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 13px 24px;
   font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.14em;
   cursor: pointer;
-  transition: transform 0.18s cubic-bezier(0.2, 1.5, 0.4, 1), box-shadow 0.2s ease, filter 0.15s ease,
-    opacity 0.12s ease;
   color: var(--ink);
-  background: var(--glass-fill);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -8px 14px rgba(0, 0, 0, 0.14);
-  font-family: inherit;
+  background: linear-gradient(180deg, #221a12 0%, #17110a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(240, 231, 211, 0.09),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease, opacity 0.12s ease;
 }
 .btn:active {
-  transform: translateY(1px) scale(0.965);
-  filter: brightness(0.96);
+  transform: translateY(1.5px);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.4);
+  filter: brightness(0.94);
 }
 .btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 .btn--primary {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.3), transparent 40%), var(--grad-gold);
-  color: #241a05;
-  border-color: rgba(255, 236, 194, 0.6);
-  box-shadow: 0 10px 26px rgba(217, 168, 63, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.65),
-    inset 0 -8px 14px rgba(168, 123, 34, 0.35);
-}
-.btn--primary:active {
-  box-shadow: 0 4px 14px rgba(217, 168, 63, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -6px 10px rgba(168, 123, 34, 0.3);
+  background: linear-gradient(180deg, #dcb573 0%, #c39a55 55%, #a87e3c 100%);
+  color: #241804;
+  border-color: var(--brass-hi);
+  text-shadow: 0 1px 0 rgba(255, 244, 214, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 214, 0.55),
+    inset 0 -3px 6px rgba(97, 67, 22, 0.4),
+    0 5px 14px rgba(0, 0, 0, 0.5);
 }
 .btn--secondary {
-  background: var(--glass-fill);
-  color: var(--ink);
+  color: var(--brass-hi);
 }
 .btn--danger {
-  background: linear-gradient(150deg, rgba(255, 107, 122, 0.22), rgba(255, 107, 122, 0.05));
-  color: #ffd7dc;
-  border-color: rgba(255, 107, 122, 0.5);
-  box-shadow: 0 8px 20px rgba(255, 107, 122, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(180deg, #78322b 0%, #571f1b 100%);
+  color: #f0d6cc;
+  border-color: rgba(214, 150, 134, 0.45);
 }
 .btn--ghost {
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   color: var(--ink-dim);
-  border: 1px solid var(--line);
+  border-color: var(--line);
   box-shadow: none;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .btn--icon {
   border-radius: 50%;
@@ -201,17 +217,20 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--gold-hi);
-  border-color: var(--line-gold);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--brass-hi);
+  border-color: var(--hairline);
 }
 .btn--large {
-  padding: 16px 40px;
-  font-size: 1.08rem;
+  padding: 17px 46px;
+  font-size: 1.1rem;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
 }
 
-/* ---------- Title screen ---------- */
+/* ---------- Title screen ----------
+   ポスターのような一枚絵。扇状のカードと明朝の大題字 */
 
 .title {
   flex: 1;
@@ -224,95 +243,158 @@ body {
   padding: 24px;
   position: relative;
 }
-.title__cardMotif {
-  font-size: 3.6rem;
-  filter: drop-shadow(0 10px 26px rgba(111, 178, 255, 0.35)) drop-shadow(0 4px 14px rgba(217, 168, 63, 0.3));
-  animation: heroFloat 3.4s ease-in-out infinite;
+
+/* 扇状に置かれた3枚。左右は伏せ札、中央だけが「?」の黒札 */
+.title__fan {
+  position: relative;
+  width: 150px;
+  height: 110px;
+  margin-bottom: 8px;
+  animation: fanSway 5.5s ease-in-out infinite;
 }
-@keyframes heroFloat {
+@keyframes fanSway {
   0%,
   100% {
-    transform: translateY(0) rotate(-4deg);
+    transform: rotate(-1.2deg) translateY(0);
   }
   50% {
-    transform: translateY(-10px) rotate(4deg);
+    transform: rotate(1.2deg) translateY(-4px);
   }
 }
+.title__fanCard {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 62px;
+  height: 88px;
+  border-radius: 6px;
+  transform-origin: 50% 115%;
+  background:
+    repeating-linear-gradient(45deg, rgba(240, 231, 211, 0.13) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, rgba(240, 231, 211, 0.13) 0 1px, transparent 1px 7px),
+    linear-gradient(160deg, var(--oxblood) 0%, #521c19 60%, var(--oxblood-deep) 100%);
+  border: 1px solid rgba(240, 231, 211, 0.35);
+  box-shadow: 0 2px 4px rgba(5, 3, 1, 0.6), 0 10px 22px rgba(5, 3, 1, 0.45);
+}
+.title__fanCard::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(240, 231, 211, 0.4);
+  border-radius: 3px;
+}
+.title__fanCard--l {
+  transform: translateX(-50%) rotate(-16deg);
+}
+.title__fanCard--r {
+  transform: translateX(-50%) rotate(16deg);
+}
+.title__fanCard--c {
+  transform: translateX(-50%) rotate(0deg) translateY(-8px);
+  background: radial-gradient(80% 60% at 50% 40%, rgba(194, 154, 94, 0.2), transparent 72%),
+    linear-gradient(165deg, #1a1310 0%, #0e0a08 100%);
+  border: 1px solid var(--brass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brass-hi);
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+.title__fanCard--c span {
+  animation: mysteryShimmer 2.6s ease-in-out infinite;
+}
+.title__fanCard--c::after {
+  border-color: rgba(232, 207, 158, 0.45);
+}
+
 .title__name {
-  font-size: 3rem;
+  font-family: var(--font-display);
+  font-size: 3.1rem;
   margin: 0;
-  letter-spacing: 0.1em;
-  font-weight: 800;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: var(--ink);
+  text-shadow: 0 2px 24px rgba(232, 207, 158, 0.18);
 }
 .title__subtitle {
-  margin: -4px 0 0;
-  color: var(--ink-dim);
-  font-size: 0.9rem;
-  letter-spacing: 0.5em;
-  text-indent: 0.5em;
+  margin: -2px 0 0;
+  color: var(--brass);
+  font-size: 0.82rem;
+  letter-spacing: 0.62em;
+  text-indent: 0.62em;
+}
+.title__subtitle::before,
+.title__subtitle::after {
+  content: '―';
+  color: var(--brass-deep);
+  margin: 0 0.6em;
+  letter-spacing: 0;
+  text-indent: 0;
 }
 .title__hook {
-  margin: 18px 0 8px;
-  font-size: 1.05rem;
+  margin: 20px 0 8px;
+  font-size: 1.08rem;
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 1.9;
+  letter-spacing: 0.08em;
 }
 .title__blurb {
-  margin-top: 20px;
+  margin-top: 22px;
   max-width: 340px;
-  font-size: 0.83rem;
+  font-size: 0.8rem;
   color: var(--ink-dim);
-  line-height: 1.8;
+  line-height: 2;
+  letter-spacing: 0.04em;
 }
 .title__chipBadge {
   position: absolute;
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--glass-fill);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  border: 1px solid var(--line-gold);
+  background: rgba(23, 15, 9, 0.82);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
-  padding: 6px 16px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  color: var(--gold-hi);
+  padding: 6px 18px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--brass-hi);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
 }
 .title__bonusBtn {
   margin-top: 4px;
 }
 .title__bonusClaimed {
   margin: 4px 0 0;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--ink-dim);
+  letter-spacing: 0.1em;
 }
 .title__insufficient {
-  background: rgba(255, 107, 122, 0.12);
-  border: 1px solid rgba(255, 107, 122, 0.4);
+  background: rgba(106, 39, 35, 0.28);
+  border: 1px solid rgba(201, 106, 93, 0.45);
   border-radius: var(--radius-sm);
   padding: 12px 18px;
   text-align: center;
 }
 .title__insufficientTitle {
   margin: 0 0 4px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--danger);
+  letter-spacing: 0.08em;
 }
 .title__insufficientBody {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--ink-dim);
 }
 .title__buyIn {
-  margin: 6px 0 0;
-  font-size: 0.75rem;
+  margin: 8px 0 0;
+  font-size: 0.73rem;
   color: var(--ink-dim);
+  letter-spacing: 0.12em;
 }
 
 /* ---------- Tutorial ---------- */
@@ -320,9 +402,7 @@ body {
 .tutorial {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 12, 0.45);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: rgba(8, 5, 3, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -330,35 +410,34 @@ body {
   z-index: 50;
 }
 .tutorial__card {
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  border: 1px solid var(--glass-border);
+  background: var(--noise), linear-gradient(170deg, #221910 0%, #17100a 100%);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  padding: 30px 24px;
+  padding: 32px 26px;
   max-width: 380px;
   width: 100%;
   text-align: center;
-  box-shadow: var(--glass-shadow);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(240, 231, 211, 0.07);
 }
 .tutorial__progress {
-  color: var(--gold);
-  font-weight: 800;
-  margin: 0 0 10px;
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
+  color: var(--brass);
+  font-weight: 700;
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  letter-spacing: 0.34em;
 }
 .tutorial__title {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-size: 1.3rem;
+  letter-spacing: 0.06em;
 }
 .tutorial__body {
   color: var(--ink-dim);
-  line-height: 1.8;
-  font-size: 0.93rem;
+  line-height: 2;
+  font-size: 0.92rem;
 }
 .tutorial__actions {
-  margin-top: 24px;
+  margin-top: 26px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -377,18 +456,21 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--ink-dim);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
 }
 .table__suddenDeath {
-  background: linear-gradient(150deg, #ff8b98, var(--danger));
-  color: white;
-  padding: 2px 12px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  background: linear-gradient(180deg, #8a3b31, var(--oxblood));
+  color: #f0d6cc;
+  padding: 2px 14px;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  border: 1px solid rgba(214, 150, 134, 0.4);
 }
 .table__opponents {
   display: grid;
@@ -396,51 +478,56 @@ body {
   gap: 6px;
   margin-top: 18px;
 }
+/* 場札の並ぶ「よく照らされた卓の中心」。フェルトに落ちた影の窪みとして表現する */
 .table__community {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  padding: 16px 10px;
-  background: var(--glass-sheen),
-    linear-gradient(150deg, rgba(91, 227, 197, 0.22), rgba(111, 178, 255, 0.1) 55%, rgba(255, 255, 255, 0.04));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  gap: 12px;
+  padding: 18px 10px;
+  background: radial-gradient(120% 160% at 50% -20%, rgba(4, 10, 6, 0.34), rgba(4, 10, 6, 0.1) 70%);
+  border: 1px solid rgba(232, 207, 158, 0.2);
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: inset 0 8px 22px rgba(2, 4, 12, 0.35), inset 0 -3px 10px rgba(255, 255, 255, 0.08),
-    0 8px 22px rgba(2, 4, 12, 0.3);
+  box-shadow:
+    inset 0 3px 12px rgba(3, 8, 5, 0.5),
+    inset 0 -1px 0 rgba(240, 231, 211, 0.06);
 }
 .table__human {
   margin-top: 4px;
 }
+.table__handLabel {
+  font-variant-numeric: tabular-nums;
+}
+.table__flopSlot {
+  display: flex;
+}
 
-/* ---------- Seat ---------- */
+/* ---------- Seat ----------
+   卓を囲む席は、革張りの席札。ガラスではなく暗い革と真鍮の縁 */
 
 .seat {
-  background: var(--glass-fill);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  background: var(--noise), linear-gradient(172deg, rgba(41, 28, 17, 0.88) 0%, rgba(24, 15, 9, 0.92) 100%);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
-  padding: 7px 4px;
+  padding: 8px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
   position: relative;
   min-width: 0;
-  box-shadow: 0 6px 18px rgba(2, 4, 12, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -8px 14px rgba(2, 4, 12, 0.14);
+  box-shadow: inset 0 1px 0 rgba(240, 231, 211, 0.07), 0 6px 14px rgba(3, 2, 1, 0.45);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .seat--active {
-  border-color: var(--line-gold);
-  box-shadow: 0 0 22px rgba(255, 227, 163, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -8px 14px rgba(2, 4, 12, 0.14);
+  border-color: var(--hairline-bright);
+  box-shadow:
+    0 0 0 1px rgba(232, 207, 158, 0.25),
+    0 0 20px rgba(216, 177, 112, 0.22),
+    inset 0 1px 0 rgba(240, 231, 211, 0.1);
 }
 .seat--folded {
-  opacity: 0.42;
+  opacity: 0.4;
 }
 .seat__header {
   display: flex;
@@ -455,49 +542,59 @@ body {
 .seat__avatar {
   font-size: 0.95rem;
   flex-shrink: 0;
+  filter: saturate(0.75) brightness(0.96);
 }
 .seat__name {
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 0.06em;
 }
 .seat__score {
-  color: var(--gold-hi);
-  font-weight: 800;
+  color: var(--brass-hi);
+  font-weight: 700;
   flex-shrink: 0;
-  background: rgba(255, 227, 163, 0.14);
-  border: 1px solid rgba(255, 227, 163, 0.32);
-  border-radius: 999px;
+  background: rgba(194, 154, 94, 0.12);
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
   padding: 0 7px;
   font-size: 0.65rem;
-  line-height: 1.5;
+  line-height: 1.6;
   font-variant-numeric: tabular-nums;
 }
 .seat__cards {
   display: flex;
   gap: 3px;
 }
+/* 手で置いた札のわずかな傾き */
+.seat__cards > .card:nth-child(1),
+.seat__cards > .flip:nth-child(1) {
+  transform: rotate(-1.6deg);
+}
+.seat__cards > .card:nth-child(3),
+.seat__cards > .flip:nth-child(3) {
+  transform: rotate(1.8deg);
+}
 .seat__emote {
   position: absolute;
   bottom: calc(100% - 4px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-  color: #171a28;
+  background: var(--paper);
+  color: var(--paper-ink);
   font-size: 0.62rem;
-  line-height: 1.35;
+  line-height: 1.4;
   font-weight: 600;
-  padding: 5px 9px;
-  border-radius: 11px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(43, 33, 21, 0.35);
+  box-shadow: 0 6px 16px rgba(3, 2, 1, 0.5);
   width: max-content;
   max-width: 118px;
   text-align: center;
   z-index: 6;
+  animation: bubblePop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
 }
 .seat__emote::after {
   content: '';
@@ -506,12 +603,22 @@ body {
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: rgba(255, 255, 255, 0.85);
+  border-top-color: var(--paper);
+}
+@keyframes bubblePop {
+  0% {
+    transform: translateX(-50%) scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
 }
 .seat__hint {
   font-size: 0.65rem;
-  color: var(--gold-hi);
-  letter-spacing: 0.04em;
+  color: var(--brass-hi);
+  letter-spacing: 0.1em;
 }
 .seat__foldedBadge {
   position: absolute;
@@ -519,20 +626,21 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
+  font-weight: 700;
   font-size: 0.95rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
   color: var(--danger);
-  background: rgba(4, 6, 12, 0.35);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 5, 3, 0.55);
   border-radius: var(--radius-sm);
   z-index: 2;
 }
 
-/* ---------- Cards ---------- */
+/* ---------- Cards ----------
+   クリーム紙に活版のインク。角は小さく、影は接地感を重視 */
 
 .card {
-  border-radius: 9px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -545,13 +653,14 @@ body {
   width: 24px;
   height: 34px;
   font-size: 0.58rem;
-  border-radius: 6px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 .card--sm {
   width: 30px;
   height: 44px;
   font-size: 0.72rem;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 .card--md {
@@ -563,12 +672,14 @@ body {
   width: 68px;
   height: 96px;
   font-size: 1.4rem;
+  border-radius: 6px;
 }
 .card--face {
-  background: linear-gradient(122deg, rgba(255, 255, 255, 0.85) 0%, transparent 30%),
-    linear-gradient(160deg, #ffffff 0%, var(--card-bg) 65%, #f0ead9 100%);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.32), inset 0 0 0 1px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  background: var(--noise), linear-gradient(165deg, #faf4e5 0%, var(--paper) 60%, var(--paper-warm) 100%);
+  box-shadow:
+    0 1px 2px rgba(5, 3, 1, 0.55),
+    0 5px 12px rgba(5, 3, 1, 0.3),
+    inset 0 0 0 1px rgba(56, 42, 24, 0.12);
 }
 .card--red {
   color: var(--card-red);
@@ -577,7 +688,7 @@ body {
   color: var(--card-black);
 }
 .card__rank {
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -585,26 +696,43 @@ body {
   line-height: 1;
   font-size: 0.82em;
 }
+/* 相手の伏せ札：オックスブラッドに格子と二重罫の、クラシックな裏面 */
 .card--hidden-opponent {
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.3) 0%, transparent 40%),
-    linear-gradient(135deg, rgba(111, 178, 255, 0.28), rgba(217, 168, 63, 0.18) 50%, rgba(91, 227, 197, 0.16)),
-    linear-gradient(150deg, #1c2244 0%, #10142a 100%);
-  background-blend-mode: overlay, normal, normal;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 -6px 10px rgba(0, 0, 0, 0.25);
+  background:
+    repeating-linear-gradient(45deg, rgba(240, 231, 211, 0.13) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, rgba(240, 231, 211, 0.13) 0 1px, transparent 1px 6px),
+    linear-gradient(160deg, var(--oxblood) 0%, #521c19 60%, var(--oxblood-deep) 100%);
+  border: 1px solid rgba(240, 231, 211, 0.32);
+  box-shadow: 0 1px 2px rgba(5, 3, 1, 0.5), 0 4px 10px rgba(5, 3, 1, 0.3);
 }
+.card--hidden-opponent::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(240, 231, 211, 0.38);
+  border-radius: 2px;
+}
+/* 自分の not me：漆黒の一枚。真鍮の縁の中で「?」だけが息づく */
 .card--hidden-self {
-  background: radial-gradient(70% 60% at 50% 42%, rgba(255, 227, 163, 0.2) 0%, transparent 75%),
-    linear-gradient(150deg, #171c3a 0%, #0c1026 100%);
-  border: 1.5px solid var(--gold);
-  color: var(--gold-hi);
-  box-shadow: 0 0 16px rgba(255, 227, 163, 0.28);
+  background: radial-gradient(80% 60% at 50% 40%, rgba(194, 154, 94, 0.2), transparent 72%),
+    linear-gradient(165deg, #1a1310 0%, #0e0a08 100%);
+  border: 1px solid var(--brass);
+  color: var(--brass-hi);
+  box-shadow: 0 0 14px rgba(216, 177, 112, 0.22), 0 1px 2px rgba(5, 3, 1, 0.5);
+}
+.card--hidden-self::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(232, 207, 158, 0.4);
+  border-radius: 2px;
 }
 .card__mystery {
-  font-weight: 900;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: 1.25em;
-  animation: mysteryShimmer 2s ease-in-out infinite;
-  text-shadow: 0 0 12px rgba(255, 227, 163, 0.6);
+  animation: mysteryShimmer 2.6s ease-in-out infinite;
+  text-shadow: 0 0 12px rgba(232, 207, 158, 0.55);
 }
 @keyframes mysteryShimmer {
   0%,
@@ -613,12 +741,15 @@ body {
     transform: scale(1);
   }
   50% {
-    opacity: 0.55;
-    transform: scale(1.12);
+    opacity: 0.5;
+    transform: scale(1.08);
   }
 }
 .card--highlighted {
-  box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(255, 227, 163, 0.4);
+  box-shadow:
+    0 0 0 2px rgba(216, 177, 112, 0.85),
+    0 0 16px rgba(216, 177, 112, 0.3),
+    0 1px 2px rgba(5, 3, 1, 0.5);
 }
 .card--flipping {
   animation: cardFlip 0.6s ease;
@@ -635,27 +766,26 @@ body {
   }
 }
 
-/* ---------- Action bar ---------- */
+/* ---------- Action bar ----------
+   卓の手前の「レール」。革の盆に真鍮の罫 */
 
 .actionbar {
   margin-top: 12px;
-  background: var(--glass-fill);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  background: var(--noise), linear-gradient(180deg, rgba(32, 22, 13, 0.94) 0%, rgba(19, 12, 7, 0.94) 100%);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: 15px 14px;
   text-align: center;
-  box-shadow: var(--glass-shadow);
+  box-shadow: inset 0 1px 0 rgba(240, 231, 211, 0.07), 0 10px 26px rgba(3, 2, 1, 0.5);
 }
 .actionbar--waiting {
   color: var(--ink-dim);
 }
 .actionbar__prompt {
   margin: 0 0 12px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
 }
 .actionbar__row {
   display: flex;
@@ -664,14 +794,14 @@ body {
   flex-wrap: wrap;
 }
 
-/* ---------- Showdown overlay ---------- */
+/* ---------- Showdown overlay ----------
+   部屋の灯りが落ち、卓上だけが照らされる決着の瞬間 */
 
 .showdown {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 12, 0.55);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: radial-gradient(90% 50% at 50% 30%, rgba(37, 25, 14, 0.55), transparent 70%),
+    rgba(8, 5, 3, 0.93);
   z-index: 60;
   display: flex;
   flex-direction: column;
@@ -689,15 +819,15 @@ body {
   }
 }
 .showdown__title {
-  margin: 4px 0 14px;
-  font-size: 1.65rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  margin: 4px 0 16px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--brass-hi);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline-bright);
   animation: titleSlam 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
 }
 @keyframes titleSlam {
@@ -717,13 +847,20 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
 }
 .showdown__communityLabel {
   font-size: 0.7rem;
   color: var(--ink-dim);
   margin-left: 6px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.24em;
+}
+.showdown__unusedNote {
+  margin: 0 0 10px;
+  font-size: 0.66rem;
+  color: var(--ink-dim);
+  letter-spacing: 0.1em;
+  animation: overlayIn 0.4s ease backwards;
 }
 .showdown__opponents {
   width: 100%;
@@ -733,21 +870,19 @@ body {
   gap: 8px;
 }
 .showdown__row {
-  background: var(--glass-fill);
+  background: linear-gradient(172deg, rgba(38, 26, 16, 0.92) 0%, rgba(22, 14, 9, 0.94) 100%);
   border: 1px solid var(--line);
-  backdrop-filter: blur(18px) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(18px) saturate(var(--glass-sat));
   border-radius: var(--radius-sm);
   padding: 9px 13px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 6px 18px rgba(2, 4, 12, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(240, 231, 211, 0.06), 0 6px 16px rgba(3, 2, 1, 0.4);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .showdown__row--winner {
-  border-color: var(--gold);
-  box-shadow: 0 0 28px rgba(255, 227, 163, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  border-color: var(--brass);
+  box-shadow: 0 0 24px rgba(216, 177, 112, 0.25), inset 0 1px 0 rgba(240, 231, 211, 0.1);
 }
 .showdown__rowHeader {
   display: flex;
@@ -757,20 +892,23 @@ body {
 }
 .showdown__rowName {
   font-weight: 700;
+  letter-spacing: 0.06em;
 }
 .showdown__category {
-  color: var(--gold-hi);
-  font-weight: 800;
+  color: var(--brass-hi);
+  font-weight: 700;
+  letter-spacing: 0.08em;
   animation: stampPop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
 }
 .showdown__winnerBadge {
-  background: var(--grad-gold);
-  color: #241a05;
-  font-weight: 900;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #dcb573, #b08a49);
+  color: #241804;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 3px;
   margin-left: auto;
   animation: stampPop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
 }
@@ -783,8 +921,14 @@ body {
   gap: 8px;
   justify-content: center;
 }
+/* 役に使わなかった1枚は、灯りの外に置かれたように沈む */
+.showdown__unused {
+  opacity: 0.34;
+  filter: grayscale(0.65) brightness(0.7);
+  transition: opacity 0.45s ease, filter 0.45s ease;
+}
 .showdown__delta {
-  font-weight: 900;
+  font-weight: 700;
   font-size: 0.95rem;
   animation: deltaFloat 0.6s ease backwards;
   align-self: flex-end;
@@ -810,26 +954,23 @@ body {
   width: 100%;
   max-width: 440px;
   margin-top: 16px;
-  background: var(--glass-sheen),
-    linear-gradient(160deg, rgba(255, 227, 163, 0.16), rgba(111, 178, 255, 0.08) 60%, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--line-gold);
-  backdrop-filter: blur(18px) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(18px) saturate(var(--glass-sat));
+  background: var(--noise), linear-gradient(170deg, rgba(48, 34, 19, 0.92) 0%, rgba(26, 17, 10, 0.94) 100%);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: inset 0 1px 0 rgba(240, 231, 211, 0.08), 0 12px 30px rgba(3, 2, 1, 0.5);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .showdown__youLabel {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--gold-hi);
-  letter-spacing: 0.06em;
+  color: var(--brass-hi);
+  letter-spacing: 0.14em;
 }
 .showdown__youLabel--suspense {
   animation: suspensePulse 0.7s ease-in-out infinite;
@@ -851,31 +992,29 @@ body {
   gap: 12px;
 }
 .showdown__categoryBig {
-  font-size: 1.25rem;
-  font-weight: 900;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--brass-hi);
+  letter-spacing: 0.1em;
   animation: stampPop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
 }
 .showdown__stamp {
-  font-weight: 900;
-  font-size: 1rem;
+  font-weight: 700;
+  font-size: 0.95rem;
   padding: 4px 16px;
-  border-radius: 999px;
+  border-radius: 3px;
   animation: stampPop 0.45s cubic-bezier(0.2, 1.8, 0.4, 1) backwards;
   animation-delay: 0.15s;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
 }
 .showdown__stamp--win {
-  background: var(--grad-gold);
-  color: #241a05;
-  box-shadow: 0 4px 16px rgba(217, 168, 63, 0.4);
+  background: linear-gradient(180deg, #dcb573, #b08a49);
+  color: #241804;
+  box-shadow: 0 4px 14px rgba(216, 177, 112, 0.35);
 }
 .showdown__stamp--lose {
-  background: var(--surface-strong);
+  background: rgba(8, 5, 3, 0.6);
   border: 1px solid var(--line);
   color: var(--ink-dim);
 }
@@ -898,14 +1037,16 @@ body {
 }
 .showdown__walkover {
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   margin: 0;
+  letter-spacing: 0.08em;
   animation: stampPop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
 }
 .showdown__peekLabel {
   margin: 12px 0 0;
   font-size: 0.85rem;
   color: var(--ink-dim);
+  letter-spacing: 0.08em;
 }
 .showdown__peekCard {
   display: flex;
@@ -963,7 +1104,7 @@ body {
   height: 100%;
 }
 .flip--glow .flip__face--front .card {
-  box-shadow: 0 0 26px rgba(255, 227, 163, 0.65), inset 0 0 0 1px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 0 24px rgba(232, 207, 158, 0.55), inset 0 0 0 1px rgba(56, 42, 24, 0.12);
 }
 .flip--glow .flip__face--back .card {
   animation: backGlow 0.7s ease-in-out infinite;
@@ -971,10 +1112,10 @@ body {
 @keyframes backGlow {
   0%,
   100% {
-    box-shadow: 0 0 6px rgba(255, 227, 163, 0.3);
+    box-shadow: 0 0 6px rgba(232, 207, 158, 0.25);
   }
   50% {
-    box-shadow: 0 0 26px rgba(255, 227, 163, 0.85);
+    box-shadow: 0 0 22px rgba(232, 207, 158, 0.7);
   }
 }
 
@@ -985,26 +1126,25 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 6px 13px;
-  border-radius: 999px;
-  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 700;
   font-size: 0.85rem;
   z-index: 5;
   white-space: nowrap;
   animation: badgeSlam 0.35s cubic-bezier(0.2, 1.8, 0.4, 1) backwards;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
-  letter-spacing: 0.04em;
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: 0 10px 24px rgba(3, 2, 1, 0.6);
+  letter-spacing: 0.1em;
 }
 .seat__decision--stay {
-  background: var(--grad-gold);
-  color: #241a05;
+  background: linear-gradient(180deg, #dcb573, #b08a49);
+  color: #241804;
+  border: 1px solid var(--brass-hi);
 }
 .seat__decision--fold {
-  background: rgba(52, 61, 94, 0.75);
-  border: 1px solid var(--line);
-  color: var(--ink-dim);
+  background: rgba(19, 12, 7, 0.92);
+  border: 1px solid rgba(201, 106, 93, 0.5);
+  color: #d8a79b;
 }
 @keyframes badgeSlam {
   0% {
@@ -1017,22 +1157,25 @@ body {
   }
 }
 
-/* ---------- せーの！バナー ---------- */
+/* ---------- せーの！バナー ----------
+   画面を横切るレターボックス（黒帯） */
 
 .revealBanner {
   position: fixed;
-  top: 34%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 2.1rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.7));
+  top: 33%;
+  left: 0;
+  right: 0;
+  padding: 16px 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.55em;
+  text-indent: 0.55em;
+  color: var(--brass-hi);
+  background: rgba(8, 5, 2, 0.86);
+  border-top: 1px solid var(--hairline-bright);
+  border-bottom: 1px solid var(--hairline-bright);
   z-index: 40;
   pointer-events: none;
   animation: bannerIn 1.4s ease forwards;
@@ -1040,14 +1183,11 @@ body {
 @keyframes bannerIn {
   0% {
     opacity: 0;
-    transform: translateX(-50%) scale(0.6);
+    transform: scaleY(0.4);
   }
   15% {
     opacity: 1;
-    transform: translateX(-50%) scale(1.1);
-  }
-  30% {
-    transform: translateX(-50%) scale(1);
+    transform: scaleY(1);
   }
   75% {
     opacity: 1;
@@ -1057,7 +1197,8 @@ body {
   }
 }
 
-/* ---------- 交換イベント（交換／山札交換の演出） ---------- */
+/* ---------- 交換イベント（強奪／交換の事件バナー） ----------
+   こちらも黒帯。事件はニュース速報のように画面を横切る */
 
 .exevent {
   position: fixed;
@@ -1066,49 +1207,49 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 22vh;
+  padding-top: 19vh;
   pointer-events: none;
   animation: overlayIn 0.2s ease;
 }
 .exevent__panel {
   pointer-events: none;
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  border: 1px solid var(--line-gold);
-  border-radius: var(--radius);
+  width: 100%;
+  background: var(--noise), linear-gradient(180deg, rgba(13, 8, 4, 0.95) 0%, rgba(22, 13, 7, 0.95) 100%);
+  border-top: 1px solid var(--hairline-bright);
+  border-bottom: 1px solid var(--hairline-bright);
   padding: 18px 26px 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: 0 18px 50px rgba(3, 2, 1, 0.6);
   animation: sheetIn 0.32s cubic-bezier(0.2, 1.3, 0.4, 1) backwards;
-  min-width: 220px;
-  max-width: 320px;
 }
 .exevent__panel--alert {
-  border-color: var(--danger);
-  box-shadow: var(--glass-shadow), 0 0 28px rgba(255, 107, 122, 0.3);
+  border-top-color: rgba(201, 106, 93, 0.75);
+  border-bottom-color: rgba(201, 106, 93, 0.75);
 }
 .exevent__icon {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   margin-bottom: 2px;
+  filter: saturate(0.8);
 }
 .exevent__title {
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  color: var(--gold-hi);
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: var(--brass-hi);
 }
 .exevent__headline {
   margin: 2px 0 10px;
   font-size: 0.9rem;
   font-weight: 700;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
 }
 .exevent__cardRow {
   display: flex;
@@ -1117,46 +1258,49 @@ body {
   gap: 4px;
 }
 .exevent__cardRow--swap {
-  gap: 10px;
+  gap: 12px;
 }
 .exevent__arrow {
-  color: var(--gold);
-  font-weight: 900;
+  color: var(--brass);
+  font-weight: 700;
   font-size: 1.1rem;
 }
 .exevent__mystery {
   margin: 8px 0 0;
   font-size: 0.7rem;
   color: var(--ink-dim);
+  letter-spacing: 0.08em;
 }
 .exevent__subLabel {
   margin: 2px 0 8px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--gold-hi);
+  color: var(--brass-hi);
+  letter-spacing: 0.1em;
 }
 .exevent__hintBox {
   margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 227, 163, 0.16);
-  border: 1px solid var(--line-gold);
-  border-radius: 999px;
+  background: rgba(194, 154, 94, 0.12);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
   padding: 7px 16px;
   animation: stampPop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
   animation-delay: 0.5s;
 }
 .exevent__hintLabel {
   font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   color: var(--ink-dim);
 }
 .exevent__hintValue {
   font-size: 0.95rem;
-  font-weight: 900;
-  color: var(--gold-hi);
+  font-weight: 700;
+  color: var(--brass-hi);
+  letter-spacing: 0.06em;
 }
 .exevent__penalty {
   margin-top: 14px;
@@ -1173,13 +1317,8 @@ body {
   font-weight: 700;
   color: var(--danger);
   text-align: center;
-  line-height: 1.5;
-}
-
-/* ---------- 場札のめくり ---------- */
-
-.table__flopSlot {
-  display: flex;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
 }
 
 /* ---------- 配札時の登場 ---------- */
@@ -1210,22 +1349,6 @@ body {
   }
 }
 
-/* ---------- 吹き出しポップ ---------- */
-
-.seat__emote {
-  animation: bubblePop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
-}
-@keyframes bubblePop {
-  0% {
-    transform: translateX(-50%) scale(0.4);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 1;
-  }
-}
-
 /* ---------- 紙吹雪 ---------- */
 
 .confetti {
@@ -1238,7 +1361,7 @@ body {
 .confetti__piece {
   position: absolute;
   top: -16px;
-  border-radius: 2px;
+  border-radius: 1px;
   animation: confettiFall linear forwards;
 }
 @keyframes confettiFall {
@@ -1268,9 +1391,9 @@ body {
   text-align: center;
 }
 .result__trophy {
-  font-size: 3.2rem;
+  font-size: 3rem;
   animation: trophyBounce 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
-  filter: drop-shadow(0 8px 20px rgba(217, 168, 63, 0.3));
+  filter: saturate(0.8) drop-shadow(0 8px 20px rgba(216, 177, 112, 0.25));
 }
 @keyframes trophyBounce {
   0% {
@@ -1286,15 +1409,14 @@ body {
   }
 }
 .result__title {
-  font-size: 1.7rem;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
   margin: 0;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--brass-hi);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline-bright);
 }
 .result__board {
   width: 100%;
@@ -1307,21 +1429,19 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--glass-fill);
+  background: var(--noise), linear-gradient(172deg, rgba(38, 26, 16, 0.9) 0%, rgba(22, 14, 9, 0.92) 100%);
   border: 1px solid var(--line);
-  backdrop-filter: blur(18px) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(18px) saturate(var(--glass-sat));
   border-radius: var(--radius-sm);
   padding: 12px 16px;
-  box-shadow: 0 6px 18px rgba(2, 4, 12, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(240, 231, 211, 0.06), 0 6px 16px rgba(3, 2, 1, 0.4);
   animation: seatIn 0.4s ease backwards;
 }
 .result__row--winner {
-  border-color: var(--line-gold);
-  background: linear-gradient(120deg, rgba(255, 227, 163, 0.2), transparent 60%), var(--glass-fill);
+  border-color: var(--brass);
+  box-shadow: 0 0 20px rgba(216, 177, 112, 0.2), inset 0 1px 0 rgba(240, 231, 211, 0.08);
 }
 .result__rank {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--ink-dim);
   width: 18px;
   font-variant-numeric: tabular-nums;
@@ -1330,10 +1450,11 @@ body {
   flex: 1;
   text-align: left;
   font-weight: 700;
+  letter-spacing: 0.06em;
 }
 .result__score {
-  font-weight: 800;
-  color: var(--gold-hi);
+  font-weight: 700;
+  color: var(--brass-hi);
   font-variant-numeric: tabular-nums;
 }
 .result__actions {
@@ -1350,33 +1471,36 @@ body {
 }
 .result__chipDelta--plus {
   font-size: 1.3rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--success);
+  font-variant-numeric: tabular-nums;
 }
 .result__chipDelta--minus {
   font-size: 1.3rem;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--danger);
+  font-variant-numeric: tabular-nums;
 }
 .result__chipBalance {
   font-size: 0.78rem;
   color: var(--ink-dim);
+  letter-spacing: 0.08em;
 }
 .result__insufficient {
   margin: 0;
   font-size: 0.78rem;
   color: var(--danger);
   font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
-/* ---------- ヘルプモーダル ---------- */
+/* ---------- ヘルプモーダル ----------
+   ルールは「紙」で渡す。クリーム紙の一枚もの、活版の趣 */
 
 .help {
   position: fixed;
   inset: 0;
-  background: rgba(4, 6, 12, 0.5);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: rgba(8, 5, 3, 0.72);
   z-index: 80;
   display: flex;
   align-items: center;
@@ -1390,12 +1514,11 @@ body {
   max-height: 86vh;
   display: flex;
   flex-direction: column;
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  border: 1px solid var(--line-gold);
-  border-radius: var(--radius);
-  box-shadow: var(--glass-shadow);
+  background: var(--noise), linear-gradient(170deg, #f5edda 0%, var(--paper) 55%, var(--paper-warm) 100%);
+  color: var(--paper-ink);
+  border: 1px solid #c8a76a;
+  border-radius: 6px;
+  box-shadow: 0 24px 60px rgba(3, 2, 1, 0.7), inset 0 0 0 1px rgba(255, 250, 238, 0.5);
   animation: sheetIn 0.3s cubic-bezier(0.2, 1.2, 0.4, 1) backwards;
 }
 @keyframes sheetIn {
@@ -1413,55 +1536,55 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px 10px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(109, 79, 34, 0.35);
 }
 .help__title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  background: var(--grad-gold);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: #6d4f22;
 }
 .help__body {
   overflow-y: auto;
   padding: 6px 18px 20px;
 }
 .help__section {
-  margin: 18px 0 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  color: var(--ink-dim);
-  text-transform: uppercase;
+  margin: 20px 0 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  color: #8a6a38;
+}
+.help__section::before {
+  content: '◆ ';
+  letter-spacing: 0;
+  font-size: 0.6rem;
+  vertical-align: 1px;
 }
 .help__hands {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 .help__handRow {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 7px 10px;
+  border-bottom: 1px dotted rgba(43, 33, 21, 0.3);
+  padding: 6px 4px;
 }
 .help__handRank {
   width: 16px;
-  font-weight: 900;
+  font-weight: 700;
   font-size: 0.75rem;
-  color: var(--gold);
+  color: #8a6a38;
   font-variant-numeric: tabular-nums;
 }
 .help__handName {
   flex: 1;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   min-width: 0;
 }
@@ -1469,63 +1592,65 @@ body {
   display: flex;
   gap: 2px;
 }
+/* 紙の上のカードは影を弱く（同じ紙同士なので浮かせすぎない） */
+.help__handCards .card--face {
+  box-shadow: 0 1px 2px rgba(43, 33, 21, 0.3), inset 0 0 0 1px rgba(56, 42, 24, 0.2);
+}
 .help__note {
-  margin: 8px 2px 0;
+  margin: 10px 2px 0;
   font-size: 0.7rem;
-  color: var(--ink-dim);
-  line-height: 1.6;
+  color: #7a6748;
+  line-height: 1.8;
 }
 .help__rules {
   margin: 0;
   padding-left: 18px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
   font-size: 0.82rem;
-  color: var(--ink);
-  line-height: 1.7;
+  color: #3a2d1d;
+  line-height: 1.9;
 }
 .help__rules li::marker {
-  color: var(--gold);
+  color: #8a6a38;
 }
 .help__scores {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
 }
 .help__scoreRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  border-bottom: 1px dotted rgba(43, 33, 21, 0.3);
+  padding: 8px 4px;
   font-size: 0.82rem;
 }
 .help__scoreValue {
-  font-weight: 800;
-  color: var(--gold-hi);
+  font-weight: 700;
+  color: #6d4f22;
   font-variant-numeric: tabular-nums;
 }
 .help__soundRow {
   margin-top: 2px;
+  border-bottom: none;
 }
 .help__toggle {
   width: 46px;
   height: 26px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(109, 79, 34, 0.5);
+  background: rgba(43, 33, 21, 0.12);
   position: relative;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
   padding: 0;
 }
 .help__toggle--on {
-  background: var(--grad-gold);
-  border-color: var(--gold);
+  background: linear-gradient(180deg, #dcb573, #b08a49);
+  border-color: #8a6a38;
 }
 .help__toggleKnob {
   position: absolute;
@@ -1534,8 +1659,8 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  background: #fffaf0;
+  box-shadow: 0 2px 6px rgba(43, 33, 21, 0.45);
   transition: transform 0.2s cubic-bezier(0.2, 1.2, 0.4, 1);
 }
 .help__toggle--on .help__toggleKnob {
@@ -1544,7 +1669,7 @@ body {
 
 @media (min-width: 540px) {
   .app {
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 1px solid rgba(194, 154, 94, 0.14);
+    border-right: 1px solid rgba(194, 154, 94, 0.14);
   }
 }

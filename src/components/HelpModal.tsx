@@ -12,24 +12,16 @@ function c(suit: Card['suit'], rank: number): Card {
   return { suit, rank };
 }
 
-// 強い順の役一覧と実例。CATEGORY_LABELS のインデックスは HandCategory の並びと対応する
+// 強い順の役一覧と実例（4枚役）。CATEGORY_LABELS のインデックスは HandCategory の並びと対応する
 const HAND_EXAMPLES: { category: number; cards: Card[] }[] = [
-  { category: 14, cards: [c('S', 9), c('S', 8), c('S', 7), c('S', 6), c('S', 5)] },
-  { category: 13, cards: [c('S', 7), c('H', 7), c('D', 7), c('C', 7), c('S', 13)] },
-  { category: 12, cards: [c('S', 12), c('H', 12), c('D', 12), c('C', 4), c('S', 4)] },
-  { category: 11, cards: [c('H', 14), c('H', 11), c('H', 8), c('H', 6), c('H', 3)] },
-  { category: 10, cards: [c('S', 8), c('H', 7), c('D', 6), c('C', 5), c('S', 4)] },
-  { category: 9, cards: [c('S', 9), c('H', 9), c('D', 9), c('C', 14), c('S', 5)] },
-  { category: 8, cards: [c('S', 11), c('H', 11), c('D', 6), c('C', 6), c('S', 12)] },
-  { category: 7, cards: [c('S', 10), c('H', 10), c('D', 14), c('C', 7), c('S', 3)] },
-  // ここから下は「お宝役」：5枚全体はハイカードだが、中に隠れた3〜4枚役があるケース
-  { category: 6, cards: [c('S', 4), c('S', 5), c('S', 6), c('S', 7)] },
-  { category: 5, cards: [c('S', 2), c('S', 6), c('S', 9), c('S', 13)] },
-  { category: 4, cards: [c('S', 5), c('S', 6), c('S', 7)] },
-  { category: 3, cards: [c('S', 5), c('H', 6), c('D', 7), c('C', 8)] },
-  { category: 2, cards: [c('S', 2), c('S', 7), c('S', 11)] },
-  { category: 1, cards: [c('S', 7), c('H', 8), c('D', 9)] },
-  { category: 0, cards: [c('S', 14), c('H', 13), c('D', 8), c('C', 5), c('S', 2)] },
+  { category: 7, cards: [c('S', 9), c('H', 9), c('D', 9), c('C', 9)] },
+  { category: 6, cards: [c('S', 8), c('S', 7), c('S', 6), c('S', 5)] },
+  { category: 5, cards: [c('S', 12), c('H', 12), c('D', 12), c('C', 7)] },
+  { category: 4, cards: [c('H', 14), c('H', 11), c('H', 8), c('H', 3)] },
+  { category: 3, cards: [c('S', 8), c('H', 7), c('D', 6), c('C', 5)] },
+  { category: 2, cards: [c('S', 11), c('H', 11), c('D', 6), c('C', 6)] },
+  { category: 1, cards: [c('S', 10), c('H', 10), c('D', 14), c('C', 7)] },
+  { category: 0, cards: [c('S', 14), c('H', 13), c('D', 8), c('C', 5)] },
 ];
 
 export function HelpModal({ onClose, muted, onToggleMute }: HelpModalProps) {
@@ -59,7 +51,7 @@ export function HelpModal({ onClose, muted, onToggleMute }: HelpModalProps) {
             ))}
           </div>
           <p className="help__note">{S.HELP_ROYAL_NOTE}</p>
-          <p className="help__note">{S.HIDDEN_HAND_NOTE}</p>
+          <p className="help__note">{S.FOUR_CARD_NOTE}</p>
 
           <h3 className="help__section">{S.HELP_RULES_SECTION}</h3>
           <ul className="help__rules">

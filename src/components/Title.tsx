@@ -15,8 +15,12 @@ export function Title({ onStart, chipBalance, buyInCost, canAfford, dailyBonus, 
     <div className="title">
       <div className="title__chipBadge">{S.CHIP_BALANCE_LABEL(chipBalance)}</div>
 
-      <div className="title__cardMotif" aria-hidden>
-        🂠
+      <div className="title__fan" aria-hidden>
+        <div className="title__fanCard title__fanCard--l" />
+        <div className="title__fanCard title__fanCard--r" />
+        <div className="title__fanCard title__fanCard--c">
+          <span>?</span>
+        </div>
       </div>
       <h1 className="title__name">{S.APP_NAME}</h1>
       <p className="title__subtitle">{S.APP_SUBTITLE}</p>

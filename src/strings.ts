@@ -30,7 +30,7 @@ export const HELP_CHIPS_LINES = [
 export const TUTORIAL_STEPS: { title: string; body: string }[] = [
   {
     title: '① 自分の1枚だけ見えない',
-    body: '5枚で役を作る。手札2枚と場札2枚は自分にも見えるが、「not me」1枚だけは自分から見えない。',
+    body: '5枚から好きな4枚を選んで役を作る。手札2枚と場札2枚は自分にも見えるが、「not me」1枚だけは自分から見えない。',
   },
   {
     title: '② 相手のは見えている',
@@ -84,22 +84,17 @@ export const SHARE_TEXT = (score: number) =>
 // HandCategory の並び順と対応させる（enum の数値インデックス通り）
 export const CATEGORY_LABELS = [
   'ハイカード',
-  '3枚ストレート',
-  '3枚フラッシュ',
-  '4枚ストレート',
-  '3枚ストレートフラッシュ',
-  '4枚フラッシュ',
-  '4枚ストレートフラッシュ',
   'ワンペア',
   'ツーペア',
-  'スリーカード',
   'ストレート',
   'フラッシュ',
-  'フルハウス',
-  'フォーカード',
+  'スリーカード',
   'ストレートフラッシュ',
+  'フォーカード',
 ];
-export const HIDDEN_HAND_NOTE = 'お宝役：ハイカードの中に隠れた3〜4枚の役を発見した特別な結果';
+export const FOUR_CARD_NOTE =
+  '役は5枚から選んだ4枚で作る。4枚勝負ではスリーカードが滅多に出ないため、フラッシュやストレートより強い。';
+export const SHOWDOWN_UNUSED_NOTE = '暗い札は役に使わなかった1枚';
 
 export const MUTE_ON = '音を消す';
 export const MUTE_OFF = '音を出す';
@@ -107,11 +102,11 @@ export const MUTE_OFF = '音を出す';
 export const HELP_BUTTON_LABEL = '役とルールを確認';
 export const HELP_TITLE = '役とルール';
 export const HELP_HANDS_SECTION = '役の強さ（上ほど強い）';
-export const HELP_ROYAL_NOTE = '※ 同スートの A-K-Q-J-10 はロイヤルストレートフラッシュ（最強）';
+export const HELP_ROYAL_NOTE = '※ 同スートの A-K-Q-J はロイヤル（最強）';
 export const HELP_RULES_SECTION = 'ルール早見';
 export const HELP_RULE_LINES = [
-  '5枚（手札2＋not me 1＋場札2）の中から、組める役の中で一番強いものが採用される（テキサスホールデム方式）。',
-  '5枚全体がハイカードの時だけ、隠れた3〜4枚のストレート／フラッシュがないか自動で探し、あればそれが「お宝役」として採用される。',
+  '役は4枚で作る。5枚（手札2＋not me 1＋場札2）から自由に4枚を選び、組める中で一番強い役が自動で採用される。',
+  '4枚勝負ではスリーカードが滅多に出ないため、スリーカードはフラッシュやストレートより強い。',
   '「not me」は自分だけ見えない。相手のnot meはあなたに見えている。',
   '配札時、自分のnot meについてのヒントが1つ必ずもらえる（偶数/奇数、7以上/以下など）。',
   '相手の反応と行動、そしてヒントから、自分のnot meの強さを逆算しよう。',
