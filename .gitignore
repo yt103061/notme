@@ -6,3 +6,4 @@ dist-ssr/
 *.local
 .vscode/*
 !.vscode/extensions.json
+.vercel
