@@ -28,6 +28,7 @@ import { Table } from './components/Table';
 import { ActionBar } from './components/ActionBar';
 import { ShowdownReveal } from './components/ShowdownReveal';
 import { ResultScreen } from './components/ResultScreen';
+import { HelpModal } from './components/HelpModal';
 import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
 import * as S from './strings';
@@ -54,6 +55,7 @@ export default function App() {
   const [showdownOpen, setShowdownOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const toastTimer = useRef<number | null>(null);
 
   function showToast(text: string) {
@@ -322,8 +324,15 @@ export default function App() {
     <div className="app">
       <header className="app__header">
         <span className="app__brand">{S.APP_NAME}</span>
-        <button className="btn btn--icon" onClick={toggleMute} aria-label={muted ? S.MUTE_OFF : S.MUTE_ON}>
-          {muted ? '🔇' : '🔊'}
+        <button
+          className="btn btn--icon"
+          onClick={() => {
+            sfx.play('tap');
+            setHelpOpen(true);
+          }}
+          aria-label={S.HELP_BUTTON_LABEL}
+        >
+          ?
         </button>
       </header>
 
@@ -361,6 +370,8 @@ export default function App() {
 
         {screen === 'result' && state && <ResultScreen players={state.players} onPlayAgain={handlePlayAgain} />}
       </main>
+
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} muted={muted} onToggleMute={toggleMute} />}
     </div>
   );
 }

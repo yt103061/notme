@@ -114,7 +114,10 @@ export function estimateWinProbability(
     let cursor = 0;
     const oppHoles = opponents.map(() => [rest[cursor++], rest[cursor++]]);
     let community = state.community;
-    if (community.length < 2) community = [rest[cursor++], rest[cursor++]];
+    if (community.length < 2) {
+      community = [...community];
+      while (community.length < 2) community.push(rest[cursor++]);
+    }
 
     const myHand = evaluateFive([...player.hole, myNotMe, ...community]);
 

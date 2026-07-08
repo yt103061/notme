@@ -6,7 +6,7 @@ export type CardVariant = 'faceUp' | 'hiddenSelf' | 'hiddenOpponent';
 interface CardViewProps {
   card?: Card;
   variant: CardVariant;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   highlighted?: boolean;
   flipping?: boolean;
 }

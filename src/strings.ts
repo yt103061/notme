@@ -78,6 +78,30 @@ export const CATEGORY_LABELS = [
 export const MUTE_ON = '音を消す';
 export const MUTE_OFF = '音を出す';
 
+export const HELP_BUTTON_LABEL = '役とルールを確認';
+export const HELP_TITLE = '役とルール';
+export const HELP_HANDS_SECTION = '役の強さ（上ほど強い）';
+export const HELP_ROYAL_NOTE = '※ 同スートの A-K-Q-J-10 はロイヤルストレートフラッシュ（最強）';
+export const HELP_RULES_SECTION = 'ルール早見';
+export const HELP_RULE_LINES = [
+  '5枚（手札2＋not me 1＋場札2）でポーカーの役を作る。',
+  '「not me」は自分だけ見えない。相手のnot meはあなたに見えている。',
+  '相手の反応と行動から、自分のnot meの強さを逆算しよう。',
+  '流れ：配札（場札1枚目公開）→ ①残る/降りる → 交換（山札交換/奪う/パス を1回まで）→ 場札2枚目公開 → ②残る/降りる → ショーダウン。',
+  '奪われたら新しいnot meが補充され、ヒントが1つもらえる。',
+];
+export const HELP_SCORING_SECTION = '得点';
+export const HELP_SCORE_ROWS: [string, string][] = [
+  ['ショーダウンで勝ち', '+2点'],
+  ['引き分け（完全同値）', '+1点'],
+  ['不戦勝（全員降りた）', '+1点'],
+  ['残って負け', '-1点'],
+  ['降りる', '0点'],
+];
+export const HELP_SOUND_SECTION = '設定';
+export const HELP_SOUND_LABEL = '効果音';
+export const HELP_CLOSE = '閉じる';
+
 export const FOLD_LOG = (name: string) => `${name}が降りた`;
 export const EXCHANGE_PASS_LOG = (name: string) => `${name}は交換しなかった`;
 export const EXCHANGE_DECK_LOG = (name: string) => `${name}が山札とnot meを交換した`;

@@ -32,29 +32,28 @@ function basePlayer(id: number, hole: Card[], notMe: Card): PlayerState {
 }
 
 describe('dealHand', () => {
-  it('deals 2 hole + 1 notMe per player and reduces the deck accordingly', () => {
+  it('deals 2 hole + 1 notMe per player, opens the 1st community card, and reduces the deck', () => {
     const rng = createRng(42);
     let state = createGame(rng, 4);
     state = dealHand(state);
 
     expect(state.handNumber).toBe(1);
     expect(state.phase).toBe('decision1');
-    expect(state.community).toEqual([]);
+    // ①降り判断の時点で場札1枚目が公開されている
+    expect(state.community).toHaveLength(1);
     for (const p of state.players) {
       expect(p.hole).toHaveLength(2);
       expect(p.folded).toBe(false);
       expect(p.usedExchange).toBe(false);
     }
-    // 52 - (2+1)*4 = 40
-    expect(state.deck).toHaveLength(40);
+    // 52 - (2+1)*4 - 場札1 = 39
+    expect(state.deck).toHaveLength(39);
 
     const seen = new Set<string>();
-    for (const p of state.players) {
-      for (const card of [...p.hole, p.notMe]) {
-        const key = `${card.suit}${card.rank}`;
-        expect(seen.has(key)).toBe(false);
-        seen.add(key);
-      }
+    for (const card of [...state.players.flatMap((p) => [...p.hole, p.notMe]), ...state.community]) {
+      const key = `${card.suit}${card.rank}`;
+      expect(seen.has(key)).toBe(false);
+      seen.add(key);
     }
   });
 });
@@ -139,14 +138,16 @@ describe('applyExchange', () => {
 });
 
 describe('revealCommunity', () => {
-  it('pulls two cards from the deck and advances to decision2', () => {
+  it('adds the 2nd community card and advances to decision2', () => {
     const rng = createRng(3);
     let state = createGame(rng, 2);
     state = dealHand(state);
     const deckBefore = state.deck.length;
+    const firstCard = state.community[0];
     state = revealCommunity(state);
     expect(state.community).toHaveLength(2);
-    expect(state.deck).toHaveLength(deckBefore - 2);
+    expect(state.community[0]).toEqual(firstCard);
+    expect(state.deck).toHaveLength(deckBefore - 1);
     expect(state.phase).toBe('decision2');
   });
 });

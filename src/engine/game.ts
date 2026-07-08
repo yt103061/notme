@@ -97,11 +97,13 @@ export function dealHand(state: GameState): GameState {
       hint: null,
     };
   });
+  // 場札の1枚目は配札と同時に公開する。判断材料ゼロでの①降り判断を避けるため
+  const community = [deck[cursor++]];
   return {
     ...state,
     players,
     deck: deck.slice(cursor),
-    community: [],
+    community,
     handNumber: state.handNumber + 1,
     phase: 'decision1',
     lastResult: null,
@@ -170,9 +172,10 @@ export function applyExchange(state: GameState, actorId: number, action: Exchang
   return { ...state, deck, players };
 }
 
+/** 交換フェーズ後に場札の2枚目を公開する（1枚目は配札時に公開済み） */
 export function revealCommunity(state: GameState): GameState {
   const deck = state.deck.slice();
-  const community = [deck.shift()!, deck.shift()!];
+  const community = [...state.community, deck.shift()!];
   return { ...state, deck, community, phase: 'decision2' };
 }
 
