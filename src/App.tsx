@@ -32,6 +32,16 @@ import { HelpModal } from './components/HelpModal';
 import { ExchangeEvent, type ExchangeEventData } from './components/ExchangeEvent';
 import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
+import {
+  getBalance,
+  canAffordBuyIn,
+  chargeBuyIn,
+  applyGameResult,
+  getDailyBonusStatus,
+  claimDailyBonus,
+  BUY_IN_COST,
+  type DailyBonusStatus,
+} from './platform/wallet';
 import * as S from './strings';
 
 type Screen = 'title' | 'tutorial' | 'game' | 'result';
@@ -57,6 +67,17 @@ export default function App() {
   const [exchangeEvent, setExchangeEvent] = useState<ExchangeEventData | null>(null);
   const [muted, setMuted] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [chipBalance, setChipBalance] = useState(() => getBalance());
+  const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
+  const [chipDelta, setChipDelta] = useState(0);
+
+  function handleClaimBonus() {
+    const result = claimDailyBonus();
+    if (!result) return;
+    sfx.play('win');
+    setChipBalance(result.newBalance);
+    setDailyBonus(getDailyBonusStatus());
+  }
 
   /**
    * 奪う＝対称的な notMe 交換。prev（適用前）と next（適用後）を見比べて演出データを組み立てる。
@@ -190,6 +211,9 @@ export default function App() {
   }
 
   function startGame() {
+    if (!canAffordBuyIn()) return;
+    setChipBalance(chargeBuyIn());
+    setChipDelta(0);
     setLog([]);
     analytics.track('game_start');
     dealNext(createGame(rng, 4), false);
@@ -198,6 +222,7 @@ export default function App() {
 
   function handleTitleStart() {
     sfx.play('tap');
+    if (!canAffordBuyIn()) return;
     if (localStorage.getItem(TUTORIAL_SEEN_KEY)) startGame();
     else setScreen('tutorial');
   }
@@ -256,7 +281,12 @@ export default function App() {
         dealNext(state, true);
         return;
       }
-      analytics.track('game_end');
+      const human = state.players.find((p) => p.isHuman)!;
+      const { delta, newBalance } = applyGameResult(human.score);
+      setChipDelta(delta);
+      setChipBalance(newBalance);
+      setDailyBonus(getDailyBonusStatus());
+      analytics.track('game_end', { score: human.score, chipDelta: delta });
       setShowdownOpen(false);
       setScreen('result');
       return;
@@ -424,7 +454,16 @@ export default function App() {
       </header>
 
       <main className="app__main">
-        {screen === 'title' && <Title onStart={handleTitleStart} />}
+        {screen === 'title' && (
+          <Title
+            onStart={handleTitleStart}
+            chipBalance={chipBalance}
+            buyInCost={BUY_IN_COST}
+            canAfford={canAffordBuyIn()}
+            dailyBonus={dailyBonus}
+            onClaimBonus={handleClaimBonus}
+          />
+        )}
         {screen === 'tutorial' && <Tutorial onFinish={handleTutorialFinish} />}
 
         {screen === 'game' && state && (
@@ -457,7 +496,17 @@ export default function App() {
           </>
         )}
 
-        {screen === 'result' && state && <ResultScreen players={state.players} onPlayAgain={handlePlayAgain} />}
+        {screen === 'result' && state && (
+          <ResultScreen
+            players={state.players}
+            onPlayAgain={handlePlayAgain}
+            chipDelta={chipDelta}
+            chipBalance={chipBalance}
+            canAfford={canAffordBuyIn()}
+            dailyBonus={dailyBonus}
+            onClaimBonus={handleClaimBonus}
+          />
+        )}
       </main>
 
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} muted={muted} onToggleMute={toggleMute} />}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { PlayerState } from '../engine/game';
+import type { DailyBonusStatus } from '../platform/wallet';
 import * as S from '../strings';
 import { analytics } from '../platform/analytics';
 import { Confetti } from './Confetti';
@@ -8,9 +9,22 @@ import { sfx } from '../audio/sfx';
 interface ResultScreenProps {
   players: PlayerState[];
   onPlayAgain: () => void;
+  chipDelta: number;
+  chipBalance: number;
+  canAfford: boolean;
+  dailyBonus: DailyBonusStatus;
+  onClaimBonus: () => void;
 }
 
-export function ResultScreen({ players, onPlayAgain }: ResultScreenProps) {
+export function ResultScreen({
+  players,
+  onPlayAgain,
+  chipDelta,
+  chipBalance,
+  canAfford,
+  dailyBonus,
+  onClaimBonus,
+}: ResultScreenProps) {
   const [shared, setShared] = useState(false);
   const sorted = [...players].sort((a, b) => b.score - a.score);
   const topScore = sorted[0].score;
@@ -53,6 +67,12 @@ export function ResultScreen({ players, onPlayAgain }: ResultScreenProps) {
       <h2 className="result__title">
         {winners.length > 1 ? S.RESULT_DRAW : S.RESULT_WINNER(winners[0].name)}
       </h2>
+      <div className="result__chipDelta">
+        <span className={chipDelta >= 0 ? 'result__chipDelta--plus' : 'result__chipDelta--minus'}>
+          {S.RESULT_CHIP_DELTA(chipDelta)}
+        </span>
+        <span className="result__chipBalance">{S.RESULT_NEW_BALANCE(chipBalance)}</span>
+      </div>
       <div className="result__board">
         {sorted.map((p, i) => (
           <div
@@ -69,14 +89,22 @@ export function ResultScreen({ players, onPlayAgain }: ResultScreenProps) {
           </div>
         ))}
       </div>
+
+      {dailyBonus.available && (
+        <button className="btn btn--secondary" onClick={onClaimBonus}>
+          🎁 {S.DAILY_BONUS_BUTTON}（+{dailyBonus.amount}{S.CHIP_ICON}）
+        </button>
+      )}
+
       <div className="result__actions">
         <button className="btn btn--secondary" onClick={handleShare}>
           {shared ? 'コピーしました！' : S.SHARE_BUTTON}
         </button>
-        <button className="btn btn--primary" onClick={onPlayAgain}>
+        <button className="btn btn--primary" onClick={onPlayAgain} disabled={!canAfford}>
           {S.PLAY_AGAIN}
         </button>
       </div>
+      {!canAfford && <p className="result__insufficient">{S.INSUFFICIENT_CHIPS_TITLE}</p>}
     </div>
   );
 }

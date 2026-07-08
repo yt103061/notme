@@ -8,7 +8,7 @@
 // （人間のサンクコスト心理の再現＝行動が読みやすくなり、かつ試合が動く）。
 
 import { type Card, type Rng, createDeck, shuffle, cardKey } from './cards';
-import { evaluateFive, compareHands } from './evaluator';
+import { evaluateHand, compareHands } from './evaluator';
 import { activePlayers, type GameState, type ExchangeAction, type Hint } from './game';
 
 export type PersonalityId = 'aggressive' | 'steady' | 'tricky';
@@ -119,12 +119,12 @@ export function estimateWinProbability(
       while (community.length < 2) community.push(rest[cursor++]);
     }
 
-    const myHand = evaluateFive([...player.hole, myNotMe, ...community]);
+    const myHand = evaluateHand([...player.hole, myNotMe, ...community]);
 
     let beaten = false;
     let tied = false;
     for (let i = 0; i < opponents.length; i++) {
-      const oppHand = evaluateFive([...oppHoles[i], opponents[i].notMe, ...community]);
+      const oppHand = evaluateHand([...oppHoles[i], opponents[i].notMe, ...community]);
       const cmp = compareHands(myHand, oppHand);
       if (cmp < 0) {
         beaten = true;

@@ -1,7 +1,7 @@
 // ハンド進行の状態機械。UI から独立した純粋ロジック（サーバー権威型へそのまま移植可能）。
 
 import { type Card, type Rng, createDeck, shuffle, isRed, isFaceCard } from './cards';
-import { evaluateFive, compareHands, type HandRank } from './evaluator';
+import { evaluateHand, compareHands, type HandRank } from './evaluator';
 
 export type Phase =
   | 'deal'
@@ -222,7 +222,7 @@ export function resolveShowdown(state: GameState): { state: GameState; result: H
   }
 
   const ranks: Record<number, HandRank> = {};
-  for (const p of remaining) ranks[p.id] = evaluateFive(fullHand(p, state.community));
+  for (const p of remaining) ranks[p.id] = evaluateHand(fullHand(p, state.community));
 
   let best = remaining[0];
   for (const p of remaining.slice(1)) {

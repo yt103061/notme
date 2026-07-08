@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { Card } from './cards';
-import { evaluateFive, compareHands, HandCategory } from './evaluator';
+import { evaluateFive, evaluateHand, compareHands, HandCategory } from './evaluator';
 
 function c(spec: string): Card {
   // spec like "AS" "10H" "2D" "KC"
@@ -111,5 +111,61 @@ describe('compareHands kicker comparison', () => {
     const twoPairAcesOverTwos = evaluateFive(hand('AS', 'AH', '2D', '2C', '9S'));
     const twoPairKingsOverQueens = evaluateFive(hand('KS', 'KH', 'QD', 'QC', '9S'));
     expect(compareHands(twoPairAcesOverTwos, twoPairKingsOverQueens)).toBeGreaterThan(0);
+  });
+});
+
+describe('evaluateHand — hidden hand rescue (Texas Hold\'em style best-of)', () => {
+  it('leaves pair-or-better hands untouched (rescue only applies to high card)', () => {
+    const r = evaluateHand(hand('7S', '7H', '2D', '4C', '9S'));
+    expect(r.category).toBe(HandCategory.OnePair);
+  });
+
+  it('leaves a genuine 5-card straight/flush untouched', () => {
+    const r = evaluateHand(hand('9S', '8S', '7S', '6S', '5S'));
+    expect(r.category).toBe(HandCategory.StraightFlush);
+  });
+
+  it('rescues a hidden 4-card flush within an otherwise high-card hand', () => {
+    // 2S,5S,9S,KS all spades; 7H breaks the full flush/straight
+    const r = evaluateHand(hand('2S', '5S', '9S', 'KS', '7H'));
+    expect(evaluateFive(hand('2S', '5S', '9S', 'KS', '7H')).category).toBe(HandCategory.HighCard);
+    expect(r.category).toBe(HandCategory.FourCardFlush);
+  });
+
+  it('rescues a hidden 4-card straight within an otherwise high-card hand', () => {
+    // 4,5,6,7 across 4 different suits + KS breaks the full straight
+    const r = evaluateHand(hand('4S', '5H', '6D', '7C', 'KS'));
+    expect(evaluateFive(hand('4S', '5H', '6D', '7C', 'KS')).category).toBe(HandCategory.HighCard);
+    expect(r.category).toBe(HandCategory.FourCardStraight);
+  });
+
+  it('rescues a hidden 4-card straight flush over a plain 4-card straight/flush', () => {
+    // 4S,5S,6S,7S same suit AND consecutive; KH breaks the full hand
+    const r = evaluateHand(hand('4S', '5S', '6S', '7S', 'KH'));
+    expect(r.category).toBe(HandCategory.FourCardStraightFlush);
+  });
+
+  it('falls back to a 3-card flush when no 4-card rescue exists', () => {
+    // 2S,5S,9S share a suit (3-flush); no 4-card subset is a straight or flush
+    const cards = hand('2S', '5S', '9S', '7H', 'KD');
+    expect(evaluateFive(cards).category).toBe(HandCategory.HighCard);
+    const r = evaluateHand(cards);
+    expect(r.category).toBe(HandCategory.ThreeCardFlush);
+  });
+
+  it('stays high card when no rescue exists at any size', () => {
+    // suits capped at 2-per-suit and ranks spread out so no 3 are ever consecutive
+    const cards = hand('2S', '5S', '9H', 'KH', '7D');
+    expect(evaluateFive(cards).category).toBe(HandCategory.HighCard);
+    const r = evaluateHand(cards);
+    expect(r.category).toBe(HandCategory.HighCard);
+  });
+
+  it('a rescued 4-card flush beats a plain high card hand but loses to one pair', () => {
+    const rescued = evaluateHand(hand('2S', '5S', '9S', 'KS', '7H'));
+    const plainHighCard = evaluateHand(hand('2S', '5H', '9D', 'KC', '7C'));
+    const onePair = evaluateHand(hand('3S', '3H', '4D', '8C', 'JC'));
+    expect(compareHands(rescued, plainHighCard)).toBeGreaterThan(0);
+    expect(compareHands(onePair, rescued)).toBeGreaterThan(0);
   });
 });
