@@ -692,12 +692,12 @@ body::before {
 
 .arena__topbar {
   position: relative;
-  z-index: 3;
+  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 2px 0 6px;
+  padding: 2px 0 10px;
 }
 .arena__handLabel {
   background: rgba(20, 12, 44, 0.5);
@@ -729,10 +729,10 @@ body::before {
   align-items: flex-start;
   justify-content: space-between;
   gap: 4px;
-  padding: 6px 4px 0;
+  padding: 2px 4px 0;
 }
 .arena__opponents > .oppo:nth-child(2) {
-  transform: translateY(-14px) scale(1.04);
+  transform: translateY(-6px) scale(1.03);
 }
 
 /* 卓の中心：場札スポットライト */
@@ -753,6 +753,39 @@ body::before {
   letter-spacing: 0.3em;
   text-indent: 0.3em;
   color: rgba(255, 255, 255, 0.7);
+}
+.arena__pot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(255, 214, 130, 0.28), rgba(224, 152, 44, 0.22));
+  border: 1.5px solid rgba(255, 230, 162, 0.6);
+  border-radius: 999px;
+  padding: 5px 16px;
+  box-shadow: 0 6px 16px rgba(90, 40, 10, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  animation: potPulse 2.4s ease-in-out infinite;
+}
+@keyframes potPulse {
+  0%,
+  100% {
+    box-shadow: 0 6px 16px rgba(90, 40, 10, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(255, 206, 84, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+.arena__potLabel {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--gold-hi);
+}
+.arena__potValue {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgba(90, 40, 10, 0.5);
 }
 .arena__community {
   display: flex;
@@ -1336,6 +1369,26 @@ body::before {
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
+}
+.actionbar__bets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+.actionbar__betBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 11px 6px;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+.actionbar__betAmt {
+  font-size: 0.66rem;
+  font-weight: 800;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- せーの！バナー ---------- */

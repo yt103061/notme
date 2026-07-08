@@ -2,14 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   getBalance,
   addChips,
-  canAffordBuyIn,
-  chargeBuyIn,
-  applyGameResult,
+  canSitDown,
+  sitDown,
+  cashOut,
   getDailyBonusStatus,
   claimDailyBonus,
   STARTING_BALANCE,
-  BUY_IN_COST,
-  SCORE_TO_CHIP_RATE,
+  SIT_DOWN_STACK,
 } from './wallet';
 
 // テスト間で完全に独立させるため、localStorage をインメモリのモックに差し替える
@@ -44,10 +43,11 @@ describe('wallet', () => {
     expect(getBalance()).toBe(STARTING_BALANCE);
   });
 
-  it('charges the buy-in cost and reports affordability', () => {
-    expect(canAffordBuyIn()).toBe(true);
-    chargeBuyIn();
-    expect(getBalance()).toBe(STARTING_BALANCE - BUY_IN_COST);
+  it('draws the sit-down stack from the wallet and reports affordability', () => {
+    expect(canSitDown()).toBe(true);
+    const stack = sitDown();
+    expect(stack).toBe(SIT_DOWN_STACK);
+    expect(getBalance()).toBe(STARTING_BALANCE - SIT_DOWN_STACK);
   });
 
   it('never lets the balance go negative', () => {
@@ -55,16 +55,19 @@ describe('wallet', () => {
     expect(getBalance()).toBe(0);
   });
 
-  it('converts final score into chips at the fixed rate', () => {
-    const { delta, newBalance } = applyGameResult(3);
-    expect(delta).toBe(3 * SCORE_TO_CHIP_RATE);
-    expect(newBalance).toBe(STARTING_BALANCE + 3 * SCORE_TO_CHIP_RATE);
+  it('cashing out a winning stack adds net winnings to the wallet', () => {
+    sitDown(); // wallet -= 300
+    const { delta, newBalance } = cashOut(500); // 300 持ち込みが 500 になって戻る
+    expect(delta).toBe(500 - SIT_DOWN_STACK);
+    expect(newBalance).toBe(STARTING_BALANCE - SIT_DOWN_STACK + 500);
     expect(getBalance()).toBe(newBalance);
   });
 
-  it('allows a negative score to reduce the balance', () => {
-    const { newBalance } = applyGameResult(-2);
-    expect(newBalance).toBe(Math.max(0, STARTING_BALANCE - 2 * SCORE_TO_CHIP_RATE));
+  it('cashing out a busted stack leaves the sit-down cost as the net loss', () => {
+    sitDown();
+    const { delta, newBalance } = cashOut(0);
+    expect(delta).toBe(-SIT_DOWN_STACK);
+    expect(newBalance).toBe(STARTING_BALANCE - SIT_DOWN_STACK);
   });
 
   it('daily bonus is available for a brand new player and grants the base amount at streak 1', () => {

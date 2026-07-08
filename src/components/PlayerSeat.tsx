@@ -1,4 +1,4 @@
-import type { PlayerState } from '../engine/game';
+import { betLabel, type BetChoice, type PlayerState } from '../engine/game';
 import { CardView } from './CardView';
 import * as S from '../strings';
 
@@ -8,8 +8,8 @@ interface PlayerSeatProps {
   player: PlayerState;
   emote?: string;
   isActingNow?: boolean;
-  /** せーの同時公開バッジ。'stay' | 'fold' */
-  decisionBadge?: 'stay' | 'fold';
+  /** せーの同時公開バッジ（賭け選択） */
+  decisionBadge?: BetChoice;
   badgeDelaySec?: number;
 }
 
@@ -32,7 +32,10 @@ export function PlayerSeat({ player, emote, isActingNow, decisionBadge, badgeDel
           {AVATAR[player.id] ?? '🙂'}
         </span>
         <span className="oppo__name">{player.name}</span>
-        <span className="oppo__score">{player.score}</span>
+        <span className="oppo__score">
+          {S.CHIP_ICON}
+          {player.stack}
+        </span>
       </div>
 
       <div className="oppo__cards">
@@ -45,10 +48,10 @@ export function PlayerSeat({ player, emote, isActingNow, decisionBadge, badgeDel
 
       {decisionBadge && (
         <div
-          className={`oppo__decision oppo__decision--${decisionBadge}`}
+          className={`oppo__decision oppo__decision--${decisionBadge === 'fold' ? 'fold' : 'stay'}`}
           style={{ animationDelay: `${badgeDelaySec}s` }}
         >
-          {decisionBadge === 'stay' ? S.BADGE_STAY : S.BADGE_FOLD}
+          {decisionBadge === 'fold' ? S.BADGE_FOLD : betLabel(decisionBadge)}
         </div>
       )}
     </div>

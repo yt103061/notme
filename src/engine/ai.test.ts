@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRng, type Card } from './cards';
 import type { GameState, PlayerState } from './game';
-import { estimateWinProbability, decideFold, decideExchange, PERSONALITIES } from './ai';
+import { estimateWinProbability, decideFold, decideBet, decideExchange, PERSONALITIES } from './ai';
 
 function c(suit: Card['suit'], rank: number): Card {
   return { suit, rank };
@@ -16,7 +16,8 @@ function player(id: number, hole: Card[], notMe: Card, extra: Partial<PlayerStat
     notMe,
     folded: false,
     usedExchange: false,
-    score: 0,
+    stack: 300,
+    staked: 10,
     hint: null,
     stolenBy: null,
     ...extra,
@@ -33,6 +34,8 @@ function state(players: PlayerState[], community: Card[] = []): GameState {
     phase: 'decision1',
     lastResult: null,
     isSuddenDeath: false,
+    pot: 40,
+    handStartStack: Object.fromEntries(players.map((p) => [p.id, 310])),
     rng: createRng(11),
   };
 }
@@ -123,6 +126,28 @@ describe('decideFold', () => {
     expect(stayedPre).toBeGreaterThanOrEqual(stayedPost);
     // 並のハンドでもプリフロップでは大半残る（AIが降りすぎない）
     expect(stayedPre).toBeGreaterThan(runs / 2);
+  });
+});
+
+describe('decideBet', () => {
+  it('folds an overwhelmingly weak hand against strong visible opponents', () => {
+    const s = state([
+      player(0, [c('S', 3), c('C', 4)], c('S', 2)),
+      player(1, [c('H', 13), c('H', 14)], c('D', 14)),
+      player(2, [c('C', 12), c('C', 13)], c('H', 13)),
+    ]);
+    const { choice } = decideBet(s, 0, PERSONALITIES.steady, createRng(55), 2);
+    expect(choice).toBe('fold');
+  });
+
+  it('does not fold an overwhelmingly strong hand, and bets into the pot', () => {
+    const s = state([
+      player(0, [c('S', 14), c('C', 14)], c('S', 2)),
+      player(1, [c('H', 3), c('H', 4)], c('D', 2)),
+    ]);
+    const { choice } = decideBet(s, 0, PERSONALITIES.steady, createRng(7), 2);
+    expect(choice).not.toBe('fold');
+    expect(['stay', 'raise', 'big']).toContain(choice);
   });
 });
 

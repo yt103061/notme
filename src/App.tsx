@@ -2,19 +2,21 @@ import { useEffect, useState } from 'react';
 import {
   createGame,
   dealHand,
-  applyFolds,
+  applyBets,
   applyExchange,
   revealCommunity,
   resolveShowdown,
   isGameOver,
   gameWinners,
   activePlayers,
+  betAmountFor,
   type GameState,
   type ExchangeAction,
+  type BetChoice,
 } from './engine/game';
 import { createRng } from './engine/cards';
 import {
-  decideFoldWithEquity,
+  decideBet,
   decideExchange,
   pickEmote,
   reactToVisibleNotMe,
@@ -35,12 +37,12 @@ import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
 import {
   getBalance,
-  canAffordBuyIn,
-  chargeBuyIn,
-  applyGameResult,
+  canSitDown,
+  sitDown,
+  cashOut,
   getDailyBonusStatus,
   claimDailyBonus,
-  BUY_IN_COST,
+  SIT_DOWN_STACK,
   type DailyBonusStatus,
 } from './platform/wallet';
 import * as S from './strings';
@@ -61,9 +63,9 @@ export default function App() {
   const [log, setLog] = useState<string[]>([]);
   const [emotes, setEmotes] = useState<Record<number, string>>({});
   const [round, setRound] = useState<1 | 2>(1);
-  const [aiFolds, setAiFolds] = useState<Record<number, boolean> | null>(null);
+  const [aiBets, setAiBets] = useState<Record<number, BetChoice> | null>(null);
   const [exchangeQueue, setExchangeQueue] = useState<number[]>([]);
-  const [decisionReveal, setDecisionReveal] = useState<Record<number, boolean> | null>(null);
+  const [decisionReveal, setDecisionReveal] = useState<Record<number, BetChoice> | null>(null);
   const [showdownOpen, setShowdownOpen] = useState(false);
   const [exchangeEvent, setExchangeEvent] = useState<ExchangeEventData | null>(null);
   const [muted, setMuted] = useState(false);
@@ -159,25 +161,30 @@ export default function App() {
     };
   }
 
-  /** そのラウンドの AI 全員の降り判断と勝率をまとめて計算 */
+  /** そのラウンドの AI 全員の賭け判断と勝率をまとめて計算 */
   function computeAiRound(s: GameState, r: 1 | 2) {
-    const folds: Record<number, boolean> = {};
+    const bets: Record<number, BetChoice> = {};
     const equities: Record<number, number> = {};
     for (const p of activePlayers(s)) {
       if (p.isHuman) continue;
-      const { fold, winProb } = decideFoldWithEquity(s, p.id, personalityFor(p.id), rng, r);
-      folds[p.id] = fold;
+      const { choice, winProb } = decideBet(s, p.id, personalityFor(p.id), rng, r);
+      bets[p.id] = choice;
       equities[p.id] = winProb;
     }
-    return { folds, equities };
+    return { bets, equities };
   }
 
   function appendLog(msg: string) {
     setLog((l) => [...l, msg].slice(-6));
   }
 
-  function appendFoldLog(next: GameState, foldedIds: number[]) {
-    for (const id of foldedIds) appendLog(S.FOLD_LOG(next.players.find((p) => p.id === id)!.name));
+  function appendBetLog(s: GameState, choices: Record<number, BetChoice>) {
+    for (const p of activePlayers(s)) {
+      const choice = choices[p.id];
+      if (choice === undefined) continue;
+      if (choice === 'fold') appendLog(S.FOLD_LOG(p.name));
+      else if (choice !== 'stay') appendLog(S.BET_LOG(p.name, betAmountFor(p, choice)));
+    }
   }
 
   // ----- ハンド開始 -----
@@ -186,7 +193,7 @@ export default function App() {
     const next = dealHand(
       suddenDeath ? { ...base, isSuddenDeath: true, totalHands: base.totalHands + 1 } : base,
     );
-    const { folds, equities } = computeAiRound(next, 1);
+    const { bets, equities } = computeAiRound(next, 1);
     const human = next.players.find((p) => p.isHuman)!;
 
     // 配られた瞬間の AI リアクション。「あなたの not me」への反応が読み合いの主要シグナルになる
@@ -203,7 +210,7 @@ export default function App() {
 
     setState(next);
     setRound(1);
-    setAiFolds(folds);
+    setAiBets(bets);
     setEmotes(newEmotes);
     setDecisionReveal(null);
     setShowdownOpen(false);
@@ -213,8 +220,9 @@ export default function App() {
   }
 
   function startGame() {
-    if (!canAffordBuyIn()) return;
-    setChipBalance(chargeBuyIn());
+    if (!canSitDown()) return;
+    sitDown();
+    setChipBalance(getBalance());
     setChipDelta(0);
     setLog([]);
     analytics.track('game_start');
@@ -225,7 +233,7 @@ export default function App() {
 
   function handleTitleStart() {
     sfx.play('tap');
-    if (!canAffordBuyIn()) return;
+    if (!canSitDown()) return;
     if (localStorage.getItem(TUTORIAL_SEEN_KEY)) startGame();
     else setScreen('tutorial');
   }
@@ -237,18 +245,17 @@ export default function App() {
 
   // ----- せーの同時公開 -----
 
-  function runDecisionReveal(s: GameState, choices: Record<number, boolean>, r: 1 | 2) {
+  function runDecisionReveal(s: GameState, choices: Record<number, BetChoice>, r: 1 | 2) {
     setDecisionReveal(choices);
     const ids = activePlayers(s).map((p) => p.id);
     ids.forEach((id, i) => {
-      window.setTimeout(() => sfx.play(choices[id] ? 'fold' : 'pop'), 250 + i * 220);
+      window.setTimeout(() => sfx.play(choices[id] === 'fold' ? 'fold' : 'pop'), 250 + i * 220);
     });
     const total = 250 + ids.length * 220 + 900;
     window.setTimeout(() => {
       setDecisionReveal(null);
-      const foldedIds = ids.filter((id) => choices[id]);
-      const next = applyFolds(s, foldedIds);
-      appendFoldLog(next, foldedIds);
+      const next = applyBets(s, choices);
+      appendBetLog(s, choices);
       if (r === 1 && activePlayers(next).length > 1) {
         setExchangeQueue(activePlayers(next).map((p) => p.id));
         setState({ ...next, phase: 'exchange' });
@@ -258,12 +265,12 @@ export default function App() {
     }, total);
   }
 
-  function handleDecisionChoice(stay: boolean) {
-    if (!state || !aiFolds) return;
+  function handleBet(choice: BetChoice) {
+    if (!state || !aiBets) return;
     sfx.play('tap');
-    analytics.track(stay ? 'stay' : 'fold', { round });
-    const choices: Record<number, boolean> = { ...aiFolds, 0: !stay };
-    setAiFolds(null);
+    analytics.track(choice === 'fold' ? 'fold' : 'bet', { round, choice });
+    const choices: Record<number, BetChoice> = { ...aiBets, 0: choice };
+    setAiBets(null);
     runDecisionReveal(state, choices, round);
   }
 
@@ -285,11 +292,11 @@ export default function App() {
         return;
       }
       const human = state.players.find((p) => p.isHuman)!;
-      const { delta, newBalance } = applyGameResult(human.score);
+      const { delta, newBalance } = cashOut(human.stack);
       setChipDelta(delta);
       setChipBalance(newBalance);
       setDailyBonus(getDailyBonusStatus());
-      analytics.track('game_end', { score: human.score, chipDelta: delta });
+      analytics.track('game_end', { stack: human.stack, chipDelta: delta });
       setShowdownOpen(false);
       setScreen('result');
       return;
@@ -307,7 +314,7 @@ export default function App() {
     if (exchangeQueue.length === 0) {
       const timer = window.setTimeout(() => {
         const revealed = revealCommunity(state);
-        const { folds, equities } = computeAiRound(revealed, 2);
+        const { bets, equities } = computeAiRound(revealed, 2);
 
         const newEmotes: Record<number, string> = {};
         for (const p of activePlayers(revealed)) {
@@ -320,9 +327,9 @@ export default function App() {
 
         const human = revealed.players.find((p) => p.isHuman)!;
         if (human.folded) {
-          window.setTimeout(() => runDecisionReveal(revealed, folds, 2), 1100);
+          window.setTimeout(() => runDecisionReveal(revealed, bets, 2), 1100);
         } else {
-          setAiFolds(folds);
+          setAiBets(bets);
         }
       }, 400);
       return () => window.clearTimeout(timer);
@@ -408,16 +415,10 @@ export default function App() {
     // 事件バナー表示中は同じ手番のアクションを再度受け付けない
     if (exchangeEvent) return <ActionBar mode="waiting" />;
 
-    if ((state.phase === 'decision1' || state.phase === 'decision2') && aiFolds) {
+    if ((state.phase === 'decision1' || state.phase === 'decision2') && aiBets) {
       const human = state.players.find((p) => p.isHuman)!;
       if (human.folded) return <ActionBar mode="waiting" />;
-      return (
-        <ActionBar
-          mode="decision"
-          onStay={() => handleDecisionChoice(true)}
-          onFold={() => handleDecisionChoice(false)}
-        />
-      );
+      return <ActionBar mode="decision" stack={human.stack} onBet={handleBet} />;
     }
 
     if (state.phase === 'exchange') {
@@ -461,8 +462,8 @@ export default function App() {
           <Title
             onStart={handleTitleStart}
             chipBalance={chipBalance}
-            buyInCost={BUY_IN_COST}
-            canAfford={canAffordBuyIn()}
+            buyInCost={SIT_DOWN_STACK}
+            canAfford={canSitDown()}
             dailyBonus={dailyBonus}
             onClaimBonus={handleClaimBonus}
           />
@@ -506,7 +507,7 @@ export default function App() {
             onPlayAgain={handlePlayAgain}
             chipDelta={chipDelta}
             chipBalance={chipBalance}
-            canAfford={canAffordBuyIn()}
+            canAfford={canSitDown()}
             dailyBonus={dailyBonus}
             onClaimBonus={handleClaimBonus}
           />

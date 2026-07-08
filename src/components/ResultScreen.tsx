@@ -26,10 +26,9 @@ export function ResultScreen({
   onClaimBonus,
 }: ResultScreenProps) {
   const [shared, setShared] = useState(false);
-  const sorted = [...players].sort((a, b) => b.score - a.score);
-  const topScore = sorted[0].score;
-  const winners = sorted.filter((p) => p.score === topScore);
-  const human = players.find((p) => p.isHuman)!;
+  const sorted = [...players].sort((a, b) => b.stack - a.stack);
+  const topStack = sorted[0].stack;
+  const winners = sorted.filter((p) => p.stack === topStack);
   const humanIsChampion = winners.some((p) => p.isHuman);
 
   useEffect(() => {
@@ -38,8 +37,8 @@ export function ResultScreen({
   }, []);
 
   async function handleShare() {
-    analytics.track('share_clicked', { score: human.score });
-    const text = S.SHARE_TEXT(human.score);
+    analytics.track('share_clicked', { chipDelta });
+    const text = S.SHARE_TEXT(chipDelta);
     const url = typeof window !== 'undefined' ? window.location.href : '';
     if (navigator.share) {
       try {
@@ -77,15 +76,17 @@ export function ResultScreen({
         {sorted.map((p, i) => (
           <div
             key={p.id}
-            className={`result__row ${p.score === topScore ? 'result__row--winner' : ''}`}
+            className={`result__row ${p.stack === topStack ? 'result__row--winner' : ''}`}
             style={{ animationDelay: `${0.2 + i * 0.15}s` }}
           >
             <span className="result__rank">{i + 1}</span>
             <span className="result__name">
               {p.name}
-              {p.score === topScore && ' 👑'}
+              {p.stack === topStack && ' 👑'}
             </span>
-            <span className="result__score">{p.score}点</span>
+            <span className="result__score">
+              {S.CHIP_ICON} {p.stack}
+            </span>
           </div>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { GameState, PlayerState } from '../engine/game';
+import { betLabel, type BetChoice, type GameState, type PlayerState } from '../engine/game';
 import { CardView } from './CardView';
 import { FlipCard } from './FlipCard';
 import { PlayerSeat } from './PlayerSeat';
@@ -11,17 +11,17 @@ interface TableProps {
   state: GameState;
   emotes: Record<number, string>;
   actingPlayerId?: number;
-  /** せーの同時公開中：playerId -> true なら降り */
-  decisionReveal?: Record<number, boolean> | null;
+  /** せーの同時公開中：playerId -> その人の賭け選択 */
+  decisionReveal?: Record<number, BetChoice> | null;
 }
 
 export function Table({ state, emotes, actingPlayerId, decisionReveal }: TableProps) {
   const human = state.players.find((p) => p.isHuman)!;
   const opponents = state.players.filter((p) => !p.isHuman);
 
-  const badgeFor = (id: number): 'stay' | 'fold' | undefined => {
+  const badgeFor = (id: number): BetChoice | undefined => {
     if (!decisionReveal || !(id in decisionReveal)) return undefined;
-    return decisionReveal[id] ? 'fold' : 'stay';
+    return decisionReveal[id];
   };
   const revealIds = decisionReveal ? Object.keys(decisionReveal).map(Number) : [];
   const badgeDelay = (id: number) => 0.25 + revealIds.indexOf(id) * 0.22;
@@ -69,8 +69,14 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
         ))}
       </div>
 
-      {/* 卓の中心のスポットライト：共有の場札 */}
+      {/* 卓の中心のスポットライト：ポット＋共有の場札 */}
       <div className="arena__center">
+        <div className="arena__pot">
+          <span className="arena__potLabel">{S.POT_LABEL}</span>
+          <span className="arena__potValue">
+            {S.CHIP_ICON} {state.pot}
+          </span>
+        </div>
         <span className="arena__centerLabel">場札</span>
         <div className="arena__community">
           {[0, 1].map((i) => (
@@ -112,10 +118,10 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
         )}
         {humanBadge && (
           <div
-            className={`arena__heroDecision arena__heroDecision--${humanBadge}`}
+            className={`arena__heroDecision arena__heroDecision--${humanBadge === 'fold' ? 'fold' : 'stay'}`}
             style={{ animationDelay: `${badgeDelay(human.id)}s` }}
           >
-            {humanBadge === 'stay' ? S.BADGE_STAY : S.BADGE_FOLD}
+            {humanBadge === 'fold' ? S.BADGE_FOLD : betLabel(humanBadge)}
           </div>
         )}
         {human.folded && <div className="arena__heroFolded">降り</div>}
@@ -124,7 +130,7 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
   );
 }
 
-/** あなたの名前・スコア・ヒントを表す浮遊チップ列 */
+/** あなたの名前・スタック・ヒントを表す浮遊チップ列 */
 function HeroInfo({ player }: { player: PlayerState }) {
   return (
     <div className="arena__heroInfo">
@@ -134,7 +140,9 @@ function HeroInfo({ player }: { player: PlayerState }) {
         </span>
         {player.name}
       </span>
-      <span className="arena__heroScore">{player.score}点</span>
+      <span className="arena__heroScore">
+        {S.CHIP_ICON} {player.stack}
+      </span>
       {player.hint && <span className="arena__heroHint">ヒント：{player.hint.label}</span>}
     </div>
   );

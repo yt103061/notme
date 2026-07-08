@@ -1,4 +1,9 @@
 // ハンド進行の状態機械。UI から独立した純粋ロジック（サーバー権威型へそのまま移植可能）。
+//
+// チップ制：各プレイヤーはゲーム開始時にウォレットから持ち込んだ「スタック」を持ち、
+// 各ハンドでアンティ＋2回の賭けラウンド（①②の降り判断のタイミング）でポットにチップを積む。
+// ショーダウンの勝者がポットを総取りする。賭けは「せーの」同時制で、フォールド／ステイ／
+// レイズ／大勝負から選ぶ。大きく賭けるほど勝てば大きく、負ければ大きく失う（＝自信・ブラフの読み合い）。
 
 import { type Card, type Rng, createDeck, shuffle, isRed, isFaceCard } from './cards';
 import { evaluateHand, compareHands, type HandRank } from './evaluator';
@@ -20,6 +25,25 @@ export interface Hint {
   label: string;
 }
 
+/** 各ハンドの賭け選択。せーの同時制で選ぶ */
+export type BetChoice = 'fold' | 'stay' | 'raise' | 'big';
+
+/** ゲーム開始時に全員へ配るスタック（ウォレットから持ち込むチップ） */
+export const STARTING_STACK = 300;
+/** 各ハンド開始時に全員が積むアンティ */
+export const ANTE = 10;
+/** 賭け選択ごとの、そのラウンドでポットに積むチップ */
+export const BET_AMOUNTS: Record<Exclude<BetChoice, 'fold'>, number> = {
+  stay: 15,
+  raise: 40,
+  big: 90,
+};
+
+export function betLabel(choice: BetChoice): string {
+  if (choice === 'fold') return 'フォールド';
+  return `+${BET_AMOUNTS[choice]}`;
+}
+
 export interface PlayerState {
   id: number;
   name: string;
@@ -28,7 +52,8 @@ export interface PlayerState {
   notMe: Card; // 本人には見えず、他人には見える
   folded: boolean;
   usedExchange: boolean;
-  score: number;
+  stack: number; // 手持ちチップ
+  staked: number; // このハンドでポットに積んだ累計
   hint: Hint | null; // 現在の notMe についてのヒント。配札時に必ず1つ付与され、notMe が変わるたびに引き直す
   stolenBy: number | null; // このハンドで自分の notMe を奪った相手の id（お互い奪い合いの検知用）
 }
@@ -42,6 +67,9 @@ export interface HandResult {
   winnerIds: number[];
   reason: 'showdown' | 'walkover'; // walkover = 不戦勝（残り1人）
   ranks: Record<number, HandRank>;
+  pot: number;
+  /** このハンドでの各プレイヤーの純チップ増減（勝者は +ポット−自分の積み、他は −積み） */
+  chipDelta: Record<number, number>;
 }
 
 export interface GameState {
@@ -53,6 +81,9 @@ export interface GameState {
   phase: Phase;
   lastResult: HandResult | null;
   isSuddenDeath: boolean;
+  pot: number;
+  /** このハンド開始時（アンティ前）の各プレイヤーのスタック。純増減の算出に使う */
+  handStartStack: Record<number, number>;
   rng: Rng;
 }
 
@@ -67,7 +98,8 @@ export function createGame(rng: Rng, playerCount = 4): GameState {
     notMe: { suit: 'S', rank: 2 },
     folded: false,
     usedExchange: false,
-    score: 0,
+    stack: STARTING_STACK,
+    staked: 0,
     hint: null,
     stolenBy: null,
   }));
@@ -80,6 +112,8 @@ export function createGame(rng: Rng, playerCount = 4): GameState {
     phase: 'gameEnd',
     lastResult: null,
     isSuddenDeath: false,
+    pot: 0,
+    handStartStack: {},
     rng,
   };
 }
@@ -87,7 +121,12 @@ export function createGame(rng: Rng, playerCount = 4): GameState {
 export function dealHand(state: GameState): GameState {
   const deck = shuffle(createDeck(), state.rng);
   let cursor = 0;
+  const handStartStack: Record<number, number> = {};
+  let pot = 0;
   const players = state.players.map((p) => {
+    handStartStack[p.id] = p.stack;
+    const ante = Math.min(ANTE, p.stack);
+    pot += ante;
     const hole = [deck[cursor++], deck[cursor++]];
     const notMe = deck[cursor++];
     return {
@@ -96,6 +135,8 @@ export function dealHand(state: GameState): GameState {
       notMe,
       folded: false,
       usedExchange: false,
+      stack: p.stack - ante,
+      staked: ante,
       // 配札時点で全員に自分の notMe についてのベースヒントを1つ与える
       hint: randomHint(notMe, state.rng),
       stolenBy: null,
@@ -111,6 +152,8 @@ export function dealHand(state: GameState): GameState {
     handNumber: state.handNumber + 1,
     phase: 'decision1',
     lastResult: null,
+    pot,
+    handStartStack,
   };
 }
 
@@ -118,12 +161,28 @@ export function activePlayers(state: GameState): PlayerState[] {
   return state.players.filter((p) => !p.folded);
 }
 
-/** 同時制の降り判断。降りたプレイヤーの id 配列を渡す */
-export function applyFolds(state: GameState, foldedIds: number[]): GameState {
-  const players = state.players.map((p) =>
-    foldedIds.includes(p.id) ? { ...p, folded: true } : p,
-  );
-  return { ...state, players };
+/** そのラウンドで実際にポットへ積む額（スタック不足なら残り全部＝オールイン） */
+export function betAmountFor(player: PlayerState, choice: BetChoice): number {
+  if (choice === 'fold') return 0;
+  return Math.min(BET_AMOUNTS[choice], player.stack);
+}
+
+/**
+ * 同時制の賭け判断。各プレイヤーの選択（フォールド／ステイ／レイズ／大勝負）を適用し、
+ * ステイ以上はそのラウンドのチップをポットへ積む。
+ */
+export function applyBets(state: GameState, choices: Record<number, BetChoice>): GameState {
+  let pot = state.pot;
+  const players = state.players.map((p) => {
+    if (p.folded) return p;
+    const choice = choices[p.id];
+    if (choice === undefined) return p;
+    if (choice === 'fold') return { ...p, folded: true };
+    const amount = betAmountFor(p, choice);
+    pot += amount;
+    return { ...p, stack: p.stack - amount, staked: p.staked + amount };
+  });
+  return { ...state, players, pot };
 }
 
 function randomHint(card: Card, rng: Rng): Hint {
@@ -206,19 +265,30 @@ function fullHand(p: PlayerState, community: Card[]): Card[] {
 
 export function resolveShowdown(state: GameState): { state: GameState; result: HandResult } {
   const remaining = activePlayers(state);
+  const pot = state.pot;
+
+  const buildDelta = (players: PlayerState[]): Record<number, number> => {
+    const delta: Record<number, number> = {};
+    for (const p of players) delta[p.id] = p.stack - (state.handStartStack[p.id] ?? p.stack);
+    return delta;
+  };
 
   if (remaining.length <= 1) {
     const winner = remaining[0];
-    const scoredPlayers = state.players.map((p) => {
-      if (winner && p.id === winner.id) return { ...p, score: p.score + 1 };
-      return p;
-    });
+    const scoredPlayers = state.players.map((p) =>
+      winner && p.id === winner.id ? { ...p, stack: p.stack + pot } : p,
+    );
     const result: HandResult = {
       winnerIds: winner ? [winner.id] : [],
       reason: 'walkover',
       ranks: {},
+      pot,
+      chipDelta: buildDelta(scoredPlayers),
     };
-    return { state: { ...state, players: scoredPlayers, phase: 'handEnd', lastResult: result }, result };
+    return {
+      state: { ...state, players: scoredPlayers, phase: 'handEnd', lastResult: result, pot: 0 },
+      result,
+    };
   }
 
   const ranks: Record<number, HandRank> = {};
@@ -232,21 +302,34 @@ export function resolveShowdown(state: GameState): { state: GameState; result: H
     .filter((p) => compareHands(ranks[p.id], ranks[best.id]) === 0)
     .map((p) => p.id);
 
+  // ポットは勝者で山分け。端数は最初の勝者に寄せる
+  const share = Math.floor(pot / winnerIds.length);
+  const remainder = pot - share * winnerIds.length;
   const scoredPlayers = state.players.map((p) => {
-    if (p.folded) return p;
-    if (winnerIds.includes(p.id)) return { ...p, score: p.score + (winnerIds.length > 1 ? 1 : 2) };
-    return { ...p, score: p.score - 1 };
+    if (!winnerIds.includes(p.id)) return p;
+    const extra = p.id === winnerIds[0] ? remainder : 0;
+    return { ...p, stack: p.stack + share + extra };
   });
 
-  const result: HandResult = { winnerIds, reason: 'showdown', ranks };
-  return { state: { ...state, players: scoredPlayers, phase: 'handEnd', lastResult: result }, result };
+  const result: HandResult = {
+    winnerIds,
+    reason: 'showdown',
+    ranks,
+    pot,
+    chipDelta: buildDelta(scoredPlayers),
+  };
+  return {
+    state: { ...state, players: scoredPlayers, phase: 'handEnd', lastResult: result, pot: 0 },
+    result,
+  };
 }
 
 export function isGameOver(state: GameState): boolean {
   return state.handNumber >= state.totalHands;
 }
 
+/** 最終順位はスタック（持ちチップ）で決まる */
 export function gameWinners(state: GameState): PlayerState[] {
-  const top = Math.max(...state.players.map((p) => p.score));
-  return state.players.filter((p) => p.score === top);
+  const top = Math.max(...state.players.map((p) => p.stack));
+  return state.players.filter((p) => p.stack === top);
 }

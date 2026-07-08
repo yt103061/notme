@@ -9,7 +9,7 @@
 
 import { type Card, type Rng, createDeck, shuffle, cardKey } from './cards';
 import { evaluateHand, compareHands } from './evaluator';
-import { activePlayers, type GameState, type ExchangeAction, type Hint } from './game';
+import { activePlayers, type GameState, type ExchangeAction, type Hint, type BetChoice } from './game';
 
 export type PersonalityId = 'aggressive' | 'steady' | 'tricky';
 
@@ -173,6 +173,46 @@ export function decideFold(
   round: 1 | 2 = 2,
 ): boolean {
   return decideFoldWithEquity(state, playerId, personality, rng, round).fold;
+}
+
+export interface BetDecision {
+  choice: BetChoice;
+  winProb: number;
+}
+
+/**
+ * 賭け判断：推定勝率＋人格で フォールド／ステイ／レイズ／大勝負 を決める。
+ * 自信があるほど大きく積む。強気・トリッキーは弱い手でも時々大きく賭ける（ブラフ）。
+ */
+export function decideBet(
+  state: GameState,
+  playerId: number,
+  personality: Personality,
+  rng: Rng,
+  round: 1 | 2 = 2,
+): BetDecision {
+  const winProb = estimateWinProbability(state, playerId, TRIALS, rng);
+  const player = state.players.find((p) => p.id === playerId);
+  let threshold =
+    round === 1 ? personality.stayThresholdPreFlop : personality.stayThresholdPostFlop;
+  if (player?.usedExchange) threshold -= SUNK_COST_BONUS;
+  const noise = (rng() - 0.5) * 2 * personality.bluffVariance;
+  const eq = winProb + noise;
+
+  if (eq < threshold) return { choice: 'fold', winProb };
+
+  // 自信に応じたサイズ。強気ほど早く大勝負に出る
+  const bigCut = 0.6 - personality.stealAggressiveness * 0.12;
+  const raiseCut = 0.42;
+  let choice: BetChoice = eq >= bigCut ? 'big' : eq >= raiseCut ? 'raise' : 'stay';
+
+  // ブラフ：弱め〜並の手でも、強気・トリッキーは時々大きく張る
+  if (choice === 'stay') {
+    const bluffChance = personality.bluffVariance * (personality.id === 'tricky' ? 2.2 : 1);
+    if (rng() < bluffChance) choice = rng() < 0.5 ? 'raise' : 'big';
+  }
+
+  return { choice, winProb };
 }
 
 export function decideExchange(

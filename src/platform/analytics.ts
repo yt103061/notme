@@ -6,6 +6,7 @@ export type AnalyticsEvent =
   | 'hand_start'
   | 'fold'
   | 'stay'
+  | 'bet'
   | 'exchange_deck'
   | 'exchange_steal'
   | 'exchange_pass'

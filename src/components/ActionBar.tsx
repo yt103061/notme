@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import type { PlayerState } from '../engine/game';
+import { BET_AMOUNTS, type BetChoice, type PlayerState } from '../engine/game';
 import * as S from '../strings';
 
 interface DecisionModeProps {
   mode: 'decision';
-  onStay: () => void;
-  onFold: () => void;
+  stack: number;
+  onBet: (choice: BetChoice) => void;
 }
 
 interface ExchangeModeProps {
@@ -27,15 +27,33 @@ export function ActionBar(props: ActionBarProps) {
   const [pickingTarget, setPickingTarget] = useState(false);
 
   if (props.mode === 'decision') {
+    const { stack, onBet } = props;
     return (
       <div className="actionbar">
         <p className="actionbar__prompt">{S.YOUR_TURN_DECIDE}</p>
-        <div className="actionbar__row">
-          <button className="btn btn--primary" onClick={props.onStay}>
-            {S.ACTION_STAY}
-          </button>
-          <button className="btn btn--danger" onClick={props.onFold}>
+        <div className="actionbar__bets">
+          <button className="btn btn--danger actionbar__betBtn" onClick={() => onBet('fold')}>
             {S.ACTION_FOLD}
+          </button>
+          <button className="btn btn--ghost actionbar__betBtn" onClick={() => onBet('stay')}>
+            {S.ACTION_STAY}
+            <span className="actionbar__betAmt">+{S.CHIP_ICON}{BET_AMOUNTS.stay}</span>
+          </button>
+          <button
+            className="btn btn--secondary actionbar__betBtn"
+            onClick={() => onBet('raise')}
+            disabled={stack < BET_AMOUNTS.stay}
+          >
+            {S.ACTION_RAISE}
+            <span className="actionbar__betAmt">+{S.CHIP_ICON}{Math.min(BET_AMOUNTS.raise, stack)}</span>
+          </button>
+          <button
+            className="btn btn--primary actionbar__betBtn"
+            onClick={() => onBet('big')}
+            disabled={stack < BET_AMOUNTS.raise}
+          >
+            {S.ACTION_BIG}
+            <span className="actionbar__betAmt">+{S.CHIP_ICON}{Math.min(BET_AMOUNTS.big, stack)}</span>
           </button>
         </div>
       </div>

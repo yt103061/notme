@@ -6,9 +6,8 @@ const LAST_BONUS_KEY = 'notme_last_bonus_date';
 const BONUS_STREAK_KEY = 'notme_bonus_streak';
 
 export const STARTING_BALANCE = 1000;
-export const BUY_IN_COST = 100;
-/** 最終スコア1点あたりのチップ換算レート */
-export const SCORE_TO_CHIP_RATE = 50;
+/** ゲームに着席する際にウォレットから持ち込むスタック。ゲーム終了時に残りを払い戻す（キャッシュアウト） */
+export const SIT_DOWN_STACK = 300;
 
 const BONUS_BASE = 100;
 const BONUS_STREAK_STEP = 20;
@@ -44,20 +43,20 @@ export function addChips(amount: number): number {
   return setBalance(getBalance() + amount);
 }
 
-export function canAffordBuyIn(): boolean {
-  return getBalance() >= BUY_IN_COST;
+export function canSitDown(): boolean {
+  return getBalance() >= SIT_DOWN_STACK;
 }
 
-/** ゲーム開始時の参加費を徴収する */
-export function chargeBuyIn(): number {
-  return setBalance(getBalance() - BUY_IN_COST);
+/** 着席：ウォレットからスタック分を持ち出す。持ち込んだスタック額を返す */
+export function sitDown(): number {
+  setBalance(getBalance() - SIT_DOWN_STACK);
+  return SIT_DOWN_STACK;
 }
 
-/** 最終スコアをチップ増減に変換して反映する */
-export function applyGameResult(finalScore: number): { delta: number; newBalance: number } {
-  const delta = finalScore * SCORE_TO_CHIP_RATE;
-  const newBalance = addChips(delta);
-  return { delta, newBalance };
+/** キャッシュアウト：ゲーム終了時に残りスタックをウォレットへ払い戻す。純増減も返す */
+export function cashOut(finalStack: number): { delta: number; newBalance: number } {
+  const newBalance = addChips(finalStack);
+  return { delta: finalStack - SIT_DOWN_STACK, newBalance };
 }
 
 export interface DailyBonusStatus {

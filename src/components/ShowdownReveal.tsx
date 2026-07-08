@@ -87,9 +87,10 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
   if (!result) return null;
 
   const deltaLabel = (playerId: number): string => {
-    if (result.winnerIds.includes(playerId)) return `+${result.winnerIds.length > 1 ? 1 : 2}点`;
-    return '-1点';
+    const d = result.chipDelta[playerId] ?? 0;
+    return `${d >= 0 ? '+' : ''}${d}${S.CHIP_ICON}`;
   };
+  const deltaPlus = (playerId: number): boolean => (result.chipDelta[playerId] ?? 0) >= 0;
 
   return (
     <div className="showdown">
@@ -104,7 +105,9 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
               : S.MUTUAL_FOLD_LOG}
           </p>
           {step >= 4 && result.winnerIds.length > 0 && (
-            <div className="showdown__stamp showdown__stamp--win">+1点</div>
+            <div className="showdown__stamp showdown__stamp--win">
+              {deltaLabel(result.winnerIds[0])}
+            </div>
           )}
           <p className="showdown__peekLabel">{S.WALKOVER_PEEK}</p>
           <div className="showdown__peekCard">
@@ -160,7 +163,7 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
                   </div>
                   {step >= 4 && (
                     <span
-                      className={`showdown__delta ${isWinner ? 'showdown__delta--plus' : 'showdown__delta--minus'}`}
+                      className={`showdown__delta ${deltaPlus(p.id) ? 'showdown__delta--plus' : 'showdown__delta--minus'}`}
                     >
                       {deltaLabel(p.id)}
                     </span>
@@ -226,7 +229,7 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
                       : S.YOU_LOSE_STAMP}
                   </span>
                   <span
-                    className={`showdown__delta ${humanWon ? 'showdown__delta--plus' : 'showdown__delta--minus'}`}
+                    className={`showdown__delta ${deltaPlus(human.id) ? 'showdown__delta--plus' : 'showdown__delta--minus'}`}
                   >
                     {deltaLabel(human.id)}
                   </span>

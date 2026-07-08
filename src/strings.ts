@@ -11,7 +11,7 @@ export const TITLE_RULES_BLURB =
 // --- チップウォレット ---
 export const CHIP_ICON = '🪙';
 export const CHIP_BALANCE_LABEL = (n: number) => `${CHIP_ICON} ${n.toLocaleString()}`;
-export const BUY_IN_LABEL = (n: number) => `参加費 ${n}${CHIP_ICON}`;
+export const BUY_IN_LABEL = (n: number) => `持ち込みチップ ${n}${CHIP_ICON}（残りは終了時に払い戻し）`;
 export const INSUFFICIENT_CHIPS_TITLE = 'チップが足りません';
 export const INSUFFICIENT_CHIPS_BODY = 'デイリーボーナスを受け取るか、明日また挑戦しよう。';
 export const DAILY_BONUS_BUTTON = 'デイリーボーナス';
@@ -23,7 +23,9 @@ export const RESULT_CHIP_DELTA = (delta: number) => `${delta >= 0 ? '+' : ''}${d
 export const RESULT_NEW_BALANCE = (n: number) => `残高 ${CHIP_BALANCE_LABEL(n)}`;
 export const HELP_CHIPS_SECTION = 'チップ';
 export const HELP_CHIPS_LINES = [
-  'ゲーム開始には参加費がかかる。最終スコアに応じてチップが増減する（1点＝50チップ換算）。',
+  'ゲーム開始時にウォレットから300チップを持ち込んで着席する。終了時に残りチップを払い戻す（キャッシュアウト）。',
+  '各ハンドは全員のアンティで始まり、①②の賭けのタイミングでポットにチップを積む。ショーダウンの勝者がポットを総取り。',
+  '大きく賭けるほど勝てば大きく、負ければ大きく失う。自信とブラフの読み合い。',
   '1日1回、デイリーボーナスでチップを受け取れる。連続で受け取るほどボーナス額が増える。',
 ];
 
@@ -37,8 +39,8 @@ export const TUTORIAL_STEPS: { title: string; body: string }[] = [
     body: '相手のnot meはあなたに見えている。逆にあなたのnot meは相手全員に見えている。',
   },
   {
-    title: '③ 残るか、降りるか',
-    body: '相手の反応や行動から、自分のnot meがどれくらい強いか逆算しよう。勝てば+2点、負けたら-1点、降りれば0点。',
+    title: '③ 賭けるか、降りるか',
+    body: '相手の反応やヒントから自分のnot meの強さを逆算し、いくら賭けるか決めよう。勝てばポット総取り、負ければ賭けた分を失う。降りれば損失なし。',
   },
 ];
 export const TUTORIAL_NEXT = 'つぎへ';
@@ -48,17 +50,22 @@ export const TUTORIAL_SKIP = 'スキップ';
 export const HAND_LABEL = (n: number, total: number) => `ハンド ${n} / ${total}`;
 export const SUDDEN_DEATH_BADGE = 'サドンデス';
 
-export const ACTION_STAY = '残る';
 export const ACTION_FOLD = '降りる';
+export const ACTION_STAY = 'ステイ';
+export const ACTION_RAISE = 'レイズ';
+export const ACTION_BIG = '大勝負';
 export const ACTION_EXCHANGE_DECK = '山札と交換';
 export const ACTION_EXCHANGE_STEAL = 'not meを奪う';
 export const ACTION_EXCHANGE_PASS = '交換しない';
 export const ACTION_BACK = 'もどる';
 export const PICK_STEAL_TARGET = '誰から奪う？';
 
-export const YOUR_TURN_DECIDE = 'あなたの番：残る？降りる？';
+export const YOUR_TURN_DECIDE = 'いくら賭ける？（降りれば損失なし）';
 export const YOUR_TURN_EXCHANGE = 'あなたの番：not meを交換する？';
 export const WAITING_FOR_OTHERS = '相手の様子を見ている…';
+export const POT_LABEL = 'ポット';
+export const STACK_LOW_HINT = 'チップが少ない…';
+export const BET_LOG = (name: string, amount: number) => `${name}が${amount}${CHIP_ICON}賭けた`;
 
 export const SHOWDOWN_TITLE = 'ショーダウン！';
 export const YOUR_NOT_ME_REVEAL = 'あなたのnot me、正体は…';
@@ -78,8 +85,8 @@ export const RESULT_WINNER = (name: string) => `${name} の勝利！`;
 export const RESULT_DRAW = '引き分け！';
 export const PLAY_AGAIN = 'もう一度あそぶ';
 export const SHARE_BUTTON = '結果をシェア';
-export const SHARE_TEXT = (score: number) =>
-  `『not me』で${score}点でした！自分のカード、1枚だけ見えないポーカー、あなたも読み合ってみて。`;
+export const SHARE_TEXT = (chipDelta: number) =>
+  `『not me』で${chipDelta >= 0 ? '+' : ''}${chipDelta}チップ！自分のカード、1枚だけ見えないポーカー、あなたも読み合ってみて。`;
 
 // HandCategory の並び順と対応させる（enum の数値インデックス通り）
 export const CATEGORY_LABELS = [
@@ -114,13 +121,13 @@ export const HELP_RULE_LINES = [
   '「奪う」は相手のnot meを一方的に奪う。奪われた側は山札から新しいnot me＋ヒントを補充、奪った側は手札1枚がランダムで山札と交換される（見ずに引き替え）。',
   '同じハンドでお互いに奪い合った場合（A→Bの後にB→A）は、そのまま単純にnot meを交換する形で決着する。',
 ];
-export const HELP_SCORING_SECTION = '得点';
+export const HELP_SCORING_SECTION = '賭けと勝敗';
 export const HELP_SCORE_ROWS: [string, string][] = [
-  ['ショーダウンで勝ち', '+2点'],
-  ['引き分け（完全同値）', '+1点'],
-  ['不戦勝（全員降りた）', '+1点'],
-  ['残って負け', '-1点'],
-  ['降りる', '0点'],
+  ['ハンド開始のアンティ', '全員 10🪙'],
+  ['ステイ', '+15🪙'],
+  ['レイズ', '+40🪙'],
+  ['大勝負', '+90🪙'],
+  ['ショーダウン勝者', 'ポット総取り'],
 ];
 export const HELP_SOUND_SECTION = '設定';
 export const HELP_SOUND_LABEL = '効果音';
