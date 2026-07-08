@@ -13,50 +13,39 @@ interface PlayerSeatProps {
   badgeDelaySec?: number;
 }
 
+/** 卓の向こう側に座る対戦相手。コンパクトな浮遊席。相手の not me は自分から見えている */
 export function PlayerSeat({ player, emote, isActingNow, decisionBadge, badgeDelaySec = 0 }: PlayerSeatProps) {
   return (
     <div
-      className={['seat', player.folded ? 'seat--folded' : '', isActingNow ? 'seat--active' : '']
+      className={['oppo', player.folded ? 'oppo--folded' : '', isActingNow ? 'oppo--active' : '']
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="seat__header">
-        <span className="seat__avatar" aria-hidden>
-          {AVATAR[player.id] ?? '🙂'}
-        </span>
-        <span className="seat__name">{player.name}</span>
-        <span className="seat__score">{player.score}</span>
-      </div>
-
       {emote && !player.folded && (
-        <div key={emote} className="seat__emote">
+        <div key={emote} className="oppo__emote">
           {emote}
         </div>
       )}
 
-      <div className="seat__cards">
-        {player.isHuman ? (
-          player.hole.map((card, i) => <CardView key={i} card={card} variant="faceUp" size="sm" />)
-        ) : (
-          <>
-            <CardView variant="hiddenOpponent" size="sm" />
-            <CardView variant="hiddenOpponent" size="sm" />
-          </>
-        )}
-        <CardView
-          card={player.notMe}
-          variant={player.isHuman ? 'hiddenSelf' : 'faceUp'}
-          size="sm"
-          highlighted={!player.isHuman}
-        />
+      <div className="oppo__plate">
+        <span className="oppo__avatar" aria-hidden>
+          {AVATAR[player.id] ?? '🙂'}
+        </span>
+        <span className="oppo__name">{player.name}</span>
+        <span className="oppo__score">{player.score}</span>
       </div>
 
-      {player.isHuman && player.hint && <div className="seat__hint">ヒント: {player.hint.label}</div>}
-      {player.folded && <div className="seat__foldedBadge">降り</div>}
+      <div className="oppo__cards">
+        <CardView variant="hiddenOpponent" size="sm" />
+        <CardView variant="hiddenOpponent" size="sm" />
+        <CardView card={player.notMe} variant="faceUp" size="sm" highlighted />
+      </div>
+
+      {player.folded && <div className="oppo__foldedBadge">降り</div>}
 
       {decisionBadge && (
         <div
-          className={`seat__decision seat__decision--${decisionBadge}`}
+          className={`oppo__decision oppo__decision--${decisionBadge}`}
           style={{ animationDelay: `${badgeDelaySec}s` }}
         >
           {decisionBadge === 'stay' ? S.BADGE_STAY : S.BADGE_FOLD}

@@ -24,6 +24,7 @@ import {
 } from './engine/ai';
 import { Title } from './components/Title';
 import { Tutorial } from './components/Tutorial';
+import { VSIntro } from './components/VSIntro';
 import { Table } from './components/Table';
 import { ActionBar } from './components/ActionBar';
 import { ShowdownReveal } from './components/ShowdownReveal';
@@ -67,6 +68,7 @@ export default function App() {
   const [exchangeEvent, setExchangeEvent] = useState<ExchangeEventData | null>(null);
   const [muted, setMuted] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [showVS, setShowVS] = useState(false);
   const [chipBalance, setChipBalance] = useState(() => getBalance());
   const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
   const [chipDelta, setChipDelta] = useState(0);
@@ -217,6 +219,7 @@ export default function App() {
     setLog([]);
     analytics.track('game_start');
     dealNext(createGame(rng, 4), false);
+    setShowVS(true);
     setScreen('game');
   }
 
@@ -493,6 +496,7 @@ export default function App() {
                 isFinalHand={isGameOver(state) && gameWinners(state).length === 1}
               />
             )}
+            {showVS && <VSIntro onDone={() => setShowVS(false)} />}
           </>
         )}
 

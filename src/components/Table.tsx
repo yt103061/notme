@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { GameState } from '../engine/game';
+import type { GameState, PlayerState } from '../engine/game';
 import { CardView } from './CardView';
 import { FlipCard } from './FlipCard';
 import { PlayerSeat } from './PlayerSeat';
 import { sfx } from '../audio/sfx';
 import { HAND_LABEL, SUDDEN_DEATH_BADGE } from '../strings';
+import * as S from '../strings';
 
 interface TableProps {
   state: GameState;
@@ -38,14 +39,24 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.community.length]);
 
+  const humanBadge = badgeFor(human.id);
+
   return (
-    <div className="table" key={`${state.handNumber}-${state.isSuddenDeath ? 'sd' : ''}`}>
-      <div className="table__topbar">
-        <span className="table__handLabel">{HAND_LABEL(state.handNumber, state.totalHands)}</span>
-        {state.isSuddenDeath && <span className="table__suddenDeath">{SUDDEN_DEATH_BADGE}</span>}
+    <div className="arena" key={`${state.handNumber}-${state.isSuddenDeath ? 'sd' : ''}`}>
+      {/* 卓の面（奥に向かって沈む楕円フェルト）。カードやUIはこの上に平置きされる */}
+      <div className="arena__felt" aria-hidden>
+        <div className="arena__feltRim" />
+        <div className="arena__feltGlow" />
       </div>
 
-      <div className="table__opponents">
+      {/* 上部の浮遊バー：ハンド数 */}
+      <div className="arena__topbar">
+        <span className="arena__handLabel">{HAND_LABEL(state.handNumber, state.totalHands)}</span>
+        {state.isSuddenDeath && <span className="arena__suddenDeath">{SUDDEN_DEATH_BADGE}</span>}
+      </div>
+
+      {/* 卓の向こう側に並ぶ対戦相手（円卓のアーチ状に配置） */}
+      <div className="arena__opponents">
         {opponents.map((p) => (
           <PlayerSeat
             key={p.id}
@@ -58,27 +69,73 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
         ))}
       </div>
 
-      <div className="table__community">
-        {[0, 1].map((i) => (
-          <div key={i} className="table__flopSlot">
-            {i < state.community.length ? (
-              <FlipCard card={state.community[i]} revealed={i < revealedCount} size="md" />
-            ) : (
-              <CardView variant="hiddenOpponent" size="md" />
-            )}
-          </div>
-        ))}
+      {/* 卓の中心のスポットライト：共有の場札 */}
+      <div className="arena__center">
+        <span className="arena__centerLabel">場札</span>
+        <div className="arena__community">
+          {[0, 1].map((i) => (
+            <div key={i} className="arena__flopSlot">
+              {i < state.community.length ? (
+                <FlipCard card={state.community[i]} revealed={i < revealedCount} size="md" />
+              ) : (
+                <div className="arena__emptySlot" />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="table__human">
-        <PlayerSeat
-          player={human}
-          emote={emotes[human.id]}
-          isActingNow={actingPlayerId === human.id}
-          decisionBadge={badgeFor(human.id)}
-          badgeDelaySec={badgeDelay(human.id)}
-        />
+      {/* 手前＝あなた。カードを大きく主役として見せる */}
+      <div
+        className={['arena__hero', human.folded ? 'arena__hero--folded' : '', actingPlayerId === human.id ? 'arena__hero--active' : '']
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <HeroInfo player={human} />
+        <div className="arena__heroCards">
+          <div className="arena__heroCard arena__heroCard--l">
+            <CardView card={human.hole[0]} variant="faceUp" size="xl" />
+          </div>
+          <div className="arena__heroCard arena__heroCard--r">
+            <CardView card={human.hole[1]} variant="faceUp" size="xl" />
+          </div>
+          <div className="arena__heroCard arena__heroCard--notme">
+            <CardView card={human.notMe} variant="hiddenSelf" size="xl" />
+            <span className="arena__notmeTag">not me</span>
+          </div>
+        </div>
+
+        {emotes[human.id] && !human.folded && (
+          <div key={emotes[human.id]} className="arena__heroEmote">
+            {emotes[human.id]}
+          </div>
+        )}
+        {humanBadge && (
+          <div
+            className={`arena__heroDecision arena__heroDecision--${humanBadge}`}
+            style={{ animationDelay: `${badgeDelay(human.id)}s` }}
+          >
+            {humanBadge === 'stay' ? S.BADGE_STAY : S.BADGE_FOLD}
+          </div>
+        )}
+        {human.folded && <div className="arena__heroFolded">降り</div>}
       </div>
+    </div>
+  );
+}
+
+/** あなたの名前・スコア・ヒントを表す浮遊チップ列 */
+function HeroInfo({ player }: { player: PlayerState }) {
+  return (
+    <div className="arena__heroInfo">
+      <span className="arena__heroName">
+        <span className="arena__heroAvatar" aria-hidden>
+          🙂
+        </span>
+        {player.name}
+      </span>
+      <span className="arena__heroScore">{player.score}点</span>
+      {player.hint && <span className="arena__heroHint">ヒント：{player.hint.label}</span>}
     </div>
   );
 }
