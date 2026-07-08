@@ -41,10 +41,19 @@ export const YOUR_TURN_DECIDE = 'あなたの番：残る？降りる？';
 export const YOUR_TURN_EXCHANGE = 'あなたの番：not meを交換する？';
 export const WAITING_FOR_OTHERS = '相手の様子を見ている…';
 
-export const SHOWDOWN_TITLE = 'ショーダウン';
+export const SHOWDOWN_TITLE = 'ショーダウン！';
 export const YOUR_NOT_ME_REVEAL = 'あなたのnot me、正体は…';
+export const WALKOVER_PEEK = 'ちなみに、あなたのnot meは…';
 export const CONTINUE_NEXT_HAND = '次のハンドへ';
 export const SEE_RESULT = '結果を見る';
+
+export const BADGE_STAY = '残る！';
+export const BADGE_FOLD = '降りる…';
+export const DECISION_REVEAL_BANNER = 'せーの！';
+export const TOAST_STOLEN_FROM_YOU = (name: string) => `⚠️ ${name}があなたのnot meを奪った！`;
+export const YOU_WIN_STAMP = 'WIN!';
+export const YOU_LOSE_STAMP = 'まけ…';
+export const DRAW_STAMP = '引き分け';
 
 export const RESULT_TITLE = 'ゲーム結果';
 export const RESULT_WINNER = (name: string) => `${name} の勝利！`;

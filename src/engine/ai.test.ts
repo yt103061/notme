@@ -83,7 +83,7 @@ describe('decideFold', () => {
       player(0, [c('S', 14), c('C', 14)], c('S', 2)),
       player(1, [c('H', 3), c('H', 4)], c('D', 2)),
     ]);
-    const folded = decideFold(s, 0, PERSONALITIES.steady, createRng(55));
+    const folded = decideFold(s, 0, PERSONALITIES.steady, createRng(55), 2);
     expect(folded).toBe(false);
   });
 
@@ -93,8 +93,35 @@ describe('decideFold', () => {
       player(1, [c('H', 13), c('H', 14)], c('D', 14)),
       player(2, [c('C', 12), c('C', 13)], c('H', 13)),
     ]);
-    const folded = decideFold(s, 0, PERSONALITIES.steady, createRng(55));
+    const folded = decideFold(s, 0, PERSONALITIES.steady, createRng(55), 2);
     expect(folded).toBe(true);
+  });
+
+  it('pre-flop thresholds are looser than post-flop for every personality (bias toward showdowns)', () => {
+    for (const p of Object.values(PERSONALITIES)) {
+      expect(p.stayThresholdPreFlop).toBeLessThan(p.stayThresholdPostFlop);
+      // 4人戦の平均勝率 0.25 を下回るプリフロップ閾値＝「基本は勝負を受ける」設計
+      expect(p.stayThresholdPreFlop).toBeLessThan(0.25);
+    }
+  });
+
+  it('is more willing to stay pre-flop than post-flop with the same mediocre hand', () => {
+    const s = state([
+      player(0, [c('S', 9), c('C', 7)], c('S', 2)),
+      player(1, [c('H', 4), c('H', 10)], c('D', 8)),
+      player(2, [c('C', 6), c('C', 3)], c('H', 5)),
+      player(3, [c('D', 3), c('D', 9)], c('S', 10)),
+    ]);
+    let stayedPre = 0;
+    let stayedPost = 0;
+    const runs = 12;
+    for (let seed = 0; seed < runs; seed++) {
+      if (!decideFold(s, 0, PERSONALITIES.steady, createRng(seed), 1)) stayedPre++;
+      if (!decideFold(s, 0, PERSONALITIES.steady, createRng(seed), 2)) stayedPost++;
+    }
+    expect(stayedPre).toBeGreaterThanOrEqual(stayedPost);
+    // 並のハンドでもプリフロップでは大半残る（AIが降りすぎない）
+    expect(stayedPre).toBeGreaterThan(runs / 2);
   });
 });
 

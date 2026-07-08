@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   createGame,
   dealHand,
@@ -13,7 +13,15 @@ import {
   type ExchangeAction,
 } from './engine/game';
 import { createRng } from './engine/cards';
-import { decideFoldWithEmote, decideExchange, PERSONALITIES, type PersonalityId } from './engine/ai';
+import {
+  decideFoldWithEquity,
+  decideExchange,
+  pickEmote,
+  reactToVisibleNotMe,
+  pickStealLine,
+  PERSONALITIES,
+  type PersonalityId,
+} from './engine/ai';
 import { Title } from './components/Title';
 import { Tutorial } from './components/Tutorial';
 import { Table } from './components/Table';
@@ -29,8 +37,8 @@ type Screen = 'title' | 'tutorial' | 'game' | 'result';
 const TUTORIAL_SEEN_KEY = 'notme_tutorial_seen';
 const AI_ORDER: PersonalityId[] = ['aggressive', 'steady', 'tricky'];
 
-function personalityFor(id: number): PersonalityId {
-  return AI_ORDER[id - 1] ?? 'steady';
+function personalityFor(id: number) {
+  return PERSONALITIES[AI_ORDER[id - 1] ?? 'steady'];
 }
 
 export default function App() {
@@ -39,117 +47,84 @@ export default function App() {
   const [state, setState] = useState<GameState | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [emotes, setEmotes] = useState<Record<number, string>>({});
-  const [decision1AiFolds, setDecision1AiFolds] = useState<Record<number, boolean> | null>(null);
-  const [decision2AiFolds, setDecision2AiFolds] = useState<Record<number, boolean> | null>(null);
+  const [round, setRound] = useState<1 | 2>(1);
+  const [aiFolds, setAiFolds] = useState<Record<number, boolean> | null>(null);
   const [exchangeQueue, setExchangeQueue] = useState<number[]>([]);
-  const [showdownStage, setShowdownStage] = useState<0 | 1 | 2>(0);
+  const [decisionReveal, setDecisionReveal] = useState<Record<number, boolean> | null>(null);
+  const [showdownOpen, setShowdownOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
+  const toastTimer = useRef<number | null>(null);
 
-  function computeAiRound(s: GameState) {
+  function showToast(text: string) {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    setToast(text);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2400);
+  }
+
+  /** そのラウンドの AI 全員の降り判断と勝率をまとめて計算 */
+  function computeAiRound(s: GameState, r: 1 | 2) {
     const folds: Record<number, boolean> = {};
-    const newEmotes: Record<number, string> = {};
+    const equities: Record<number, number> = {};
     for (const p of activePlayers(s)) {
       if (p.isHuman) continue;
-      const personality = PERSONALITIES[personalityFor(p.id)];
-      const { fold, emote } = decideFoldWithEmote(s, p.id, personality, rng);
+      const { fold, winProb } = decideFoldWithEquity(s, p.id, personalityFor(p.id), rng, r);
       folds[p.id] = fold;
-      newEmotes[p.id] = emote;
+      equities[p.id] = winProb;
     }
-    return { folds, emotes: newEmotes };
+    return { folds, equities };
   }
 
-  function appendFoldLog(next: GameState, foldedIds: number[]) {
-    const msgs = foldedIds.map((id) => S.FOLD_LOG(next.players.find((p) => p.id === id)!.name));
-    if (msgs.length) setLog((l) => [...l, ...msgs].slice(-6));
-  }
-
-  function appendExchangeLog(current: GameState, actorId: number, action: ExchangeAction) {
-    const actor = current.players.find((p) => p.id === actorId)!;
-    let msg: string;
-    if (action.type === 'pass') msg = S.EXCHANGE_PASS_LOG(actor.name);
-    else if (action.type === 'drawDeck') msg = S.EXCHANGE_DECK_LOG(actor.name);
-    else msg = S.EXCHANGE_STEAL_LOG(actor.name, current.players.find((p) => p.id === action.targetId)!.name);
+  function appendLog(msg: string) {
     setLog((l) => [...l, msg].slice(-6));
   }
 
-  function proceedAfterFoldRound(next: GameState, isFirstRound: boolean) {
-    if (isFirstRound && activePlayers(next).length > 1) {
-      setExchangeQueue(activePlayers(next).map((p) => p.id));
-      setState({ ...next, phase: 'exchange' });
-      return;
-    }
-    const { state: resolved, result } = resolveShowdown(next);
-    setState(resolved);
-    setShowdownStage(1);
-    sfx.play('flip');
-    analytics.track('showdown', { reason: result.reason });
-    window.setTimeout(() => {
-      setShowdownStage(2);
-      const human = resolved.players.find((p) => p.isHuman)!;
-      const humanWon = result.winnerIds.includes(human.id);
-      sfx.play(result.winnerIds.length === 0 ? 'fold' : humanWon ? 'win' : 'lose');
-    }, 1400);
+  function appendFoldLog(next: GameState, foldedIds: number[]) {
+    for (const id of foldedIds) appendLog(S.FOLD_LOG(next.players.find((p) => p.id === id)!.name));
   }
 
-  // 交換フェーズの進行（AI は一定時間後に自動決定、人間の番では ActionBar 待ち）
-  useEffect(() => {
-    if (!state || state.phase !== 'exchange') return;
+  // ----- ハンド開始 -----
 
-    if (exchangeQueue.length === 0) {
-      const revealed = revealCommunity(state);
-      const { folds, emotes: newEmotes } = computeAiRound(revealed);
-      setEmotes((e) => ({ ...e, ...newEmotes }));
-      const human = revealed.players.find((p) => p.isHuman)!;
-      if (human.folded) {
-        const timer = window.setTimeout(() => {
-          const foldedIds = Object.entries(folds)
-            .filter(([, f]) => f)
-            .map(([id]) => Number(id));
-          const resolved = applyFolds(revealed, foldedIds);
-          appendFoldLog(resolved, foldedIds);
-          proceedAfterFoldRound(resolved, false);
-        }, 1000);
-        return () => window.clearTimeout(timer);
+  function dealNext(base: GameState, suddenDeath: boolean) {
+    const next = dealHand(
+      suddenDeath ? { ...base, isSuddenDeath: true, totalHands: base.totalHands + 1 } : base,
+    );
+    const { folds, equities } = computeAiRound(next, 1);
+    const human = next.players.find((p) => p.isHuman)!;
+
+    // 配られた瞬間の AI リアクション。「あなたの not me」への反応が読み合いの主要シグナルになる
+    const newEmotes: Record<number, string> = {};
+    for (const p of next.players) {
+      if (p.isHuman) continue;
+      const roll = rng();
+      if (roll < 0.55) {
+        newEmotes[p.id] = reactToVisibleNotMe(human.notMe.rank, personalityFor(p.id), rng);
+      } else if (roll < 0.8) {
+        newEmotes[p.id] = pickEmote(equities[p.id], rng).text;
       }
-      setDecision2AiFolds(folds);
-      setState(revealed);
-      return;
     }
 
-    const currentId = exchangeQueue[0];
-    const player = state.players.find((p) => p.id === currentId)!;
-    if (player.isHuman) return;
-
-    const timer = window.setTimeout(() => {
-      const personality = PERSONALITIES[personalityFor(currentId)];
-      const action = decideExchange(state, currentId, personality, rng);
-      appendExchangeLog(state, currentId, action);
-      const next = applyExchange(state, currentId, action);
-      sfx.play('exchange');
-      setState(next);
-      setExchangeQueue((q) => q.slice(1));
-    }, 900);
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, exchangeQueue]);
+    setState(next);
+    setRound(1);
+    setAiFolds(folds);
+    setEmotes(newEmotes);
+    setDecisionReveal(null);
+    setShowdownOpen(false);
+    sfx.play('deal');
+    analytics.track('hand_start', { hand: next.handNumber, suddenDeath });
+    if (suddenDeath) appendLog(`${S.SUDDEN_DEATH_BADGE}！`);
+  }
 
   function startGame() {
-    const next = dealHand(createGame(rng, 4));
-    const { folds, emotes: newEmotes } = computeAiRound(next);
-    setState(next);
-    setDecision1AiFolds(folds);
-    setEmotes(newEmotes);
     setLog([]);
-    setShowdownStage(0);
     analytics.track('game_start');
-    analytics.track('hand_start', { hand: next.handNumber });
+    dealNext(createGame(rng, 4), false);
     setScreen('game');
   }
 
   function handleTitleStart() {
     sfx.play('tap');
-    const seen = localStorage.getItem(TUTORIAL_SEEN_KEY);
-    if (seen) startGame();
+    if (localStorage.getItem(TUTORIAL_SEEN_KEY)) startGame();
     else setScreen('tutorial');
   }
 
@@ -158,70 +133,142 @@ export default function App() {
     startGame();
   }
 
-  function handleDecision1Choice(stay: boolean) {
-    if (!state || !decision1AiFolds) return;
-    sfx.play(stay ? 'stay' : 'fold');
-    analytics.track(stay ? 'stay' : 'fold', { round: 1 });
-    const foldedIds = Object.entries(decision1AiFolds)
-      .filter(([, f]) => f)
-      .map(([id]) => Number(id));
-    if (!stay) foldedIds.push(0);
-    const next = applyFolds(state, foldedIds);
-    appendFoldLog(next, foldedIds);
-    setDecision1AiFolds(null);
-    proceedAfterFoldRound(next, true);
+  // ----- せーの同時公開 -----
+
+  function runDecisionReveal(s: GameState, choices: Record<number, boolean>, r: 1 | 2) {
+    setDecisionReveal(choices);
+    const ids = activePlayers(s).map((p) => p.id);
+    ids.forEach((id, i) => {
+      window.setTimeout(() => sfx.play(choices[id] ? 'fold' : 'pop'), 250 + i * 220);
+    });
+    const total = 250 + ids.length * 220 + 900;
+    window.setTimeout(() => {
+      setDecisionReveal(null);
+      const foldedIds = ids.filter((id) => choices[id]);
+      const next = applyFolds(s, foldedIds);
+      appendFoldLog(next, foldedIds);
+      if (r === 1 && activePlayers(next).length > 1) {
+        setExchangeQueue(activePlayers(next).map((p) => p.id));
+        setState({ ...next, phase: 'exchange' });
+      } else {
+        resolveAndShow(next);
+      }
+    }, total);
   }
 
-  function handleDecision2Choice(stay: boolean) {
-    if (!state || !decision2AiFolds) return;
-    sfx.play(stay ? 'stay' : 'fold');
-    analytics.track(stay ? 'stay' : 'fold', { round: 2 });
-    const foldedIds = Object.entries(decision2AiFolds)
-      .filter(([, f]) => f)
-      .map(([id]) => Number(id));
-    if (!stay) foldedIds.push(0);
-    const next = applyFolds(state, foldedIds);
-    appendFoldLog(next, foldedIds);
-    setDecision2AiFolds(null);
-    proceedAfterFoldRound(next, false);
+  function handleDecisionChoice(stay: boolean) {
+    if (!state || !aiFolds) return;
+    sfx.play('tap');
+    analytics.track(stay ? 'stay' : 'fold', { round });
+    const choices: Record<number, boolean> = { ...aiFolds, 0: !stay };
+    setAiFolds(null);
+    runDecisionReveal(state, choices, round);
+  }
+
+  // ----- ショーダウン -----
+
+  function resolveAndShow(next: GameState) {
+    const { state: resolved, result } = resolveShowdown(next);
+    analytics.track('showdown', { reason: result.reason });
+    setState(resolved);
+    setShowdownOpen(true);
+  }
+
+  function handleNextHand() {
+    if (!state) return;
+    sfx.play('tap');
+    if (isGameOver(state)) {
+      if (gameWinners(state).length > 1) {
+        dealNext(state, true);
+        return;
+      }
+      analytics.track('game_end');
+      setShowdownOpen(false);
+      setScreen('result');
+      return;
+    }
+    dealNext(state, false);
+  }
+
+  // ----- 交換フェーズ（AI は自動、人間は ActionBar 待ち） -----
+
+  useEffect(() => {
+    if (!state || state.phase !== 'exchange') return;
+
+    if (exchangeQueue.length === 0) {
+      const timer = window.setTimeout(() => {
+        const revealed = revealCommunity(state);
+        sfx.play('flip');
+        const { folds, equities } = computeAiRound(revealed, 2);
+
+        const newEmotes: Record<number, string> = {};
+        for (const p of activePlayers(revealed)) {
+          if (p.isHuman) continue;
+          if (rng() < 0.75) newEmotes[p.id] = pickEmote(equities[p.id], rng).text;
+        }
+        setEmotes(newEmotes);
+        setRound(2);
+        setState(revealed);
+
+        const human = revealed.players.find((p) => p.isHuman)!;
+        if (human.folded) {
+          window.setTimeout(() => runDecisionReveal(revealed, folds, 2), 1100);
+        } else {
+          setAiFolds(folds);
+        }
+      }, 400);
+      return () => window.clearTimeout(timer);
+    }
+
+    const currentId = exchangeQueue[0];
+    const actor = state.players.find((p) => p.id === currentId)!;
+    if (actor.isHuman) return;
+
+    const timer = window.setTimeout(() => {
+      const action = decideExchange(state, currentId, personalityFor(currentId), rng);
+      appendExchangeLog(state, currentId, action);
+      if (action.type === 'steal') {
+        sfx.play('exchange');
+        setEmotes((e) => ({ ...e, [currentId]: pickStealLine(rng) }));
+        const targetName = state.players.find((p) => p.id === action.targetId)!.name;
+        showToast(
+          action.targetId === 0
+            ? S.TOAST_STOLEN_FROM_YOU(actor.name)
+            : S.EXCHANGE_STEAL_LOG(actor.name, targetName),
+        );
+      } else if (action.type === 'drawDeck') {
+        sfx.play('exchange');
+      }
+      setState(applyExchange(state, currentId, action));
+      setExchangeQueue((q) => q.slice(1));
+    }, 950);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, exchangeQueue]);
+
+  function appendExchangeLog(current: GameState, actorId: number, action: ExchangeAction) {
+    const actor = current.players.find((p) => p.id === actorId)!;
+    if (action.type === 'pass') appendLog(S.EXCHANGE_PASS_LOG(actor.name));
+    else if (action.type === 'drawDeck') appendLog(S.EXCHANGE_DECK_LOG(actor.name));
+    else
+      appendLog(
+        S.EXCHANGE_STEAL_LOG(actor.name, current.players.find((p) => p.id === action.targetId)!.name),
+      );
   }
 
   function handleHumanExchange(action: ExchangeAction) {
     if (!state) return;
     sfx.play('exchange');
     analytics.track(
-      action.type === 'drawDeck' ? 'exchange_deck' : action.type === 'steal' ? 'exchange_steal' : 'exchange_pass',
+      action.type === 'drawDeck'
+        ? 'exchange_deck'
+        : action.type === 'steal'
+          ? 'exchange_steal'
+          : 'exchange_pass',
     );
     appendExchangeLog(state, 0, action);
-    const next = applyExchange(state, 0, action);
-    setState(next);
+    setState(applyExchange(state, 0, action));
     setExchangeQueue((q) => q.slice(1));
-  }
-
-  function dealNextHand(base: GameState, suddenDeath: boolean) {
-    const next = dealHand(suddenDeath ? { ...base, isSuddenDeath: true, totalHands: base.totalHands + 1 } : base);
-    const { folds, emotes: newEmotes } = computeAiRound(next);
-    setState(next);
-    setDecision1AiFolds(folds);
-    setEmotes(newEmotes);
-    setShowdownStage(0);
-    analytics.track('hand_start', { hand: next.handNumber, suddenDeath });
-    if (suddenDeath) setLog((l) => [...l, `${S.SUDDEN_DEATH_BADGE}！`].slice(-6));
-  }
-
-  function handleNextHand() {
-    if (!state) return;
-    if (isGameOver(state)) {
-      const winners = gameWinners(state);
-      if (winners.length > 1) {
-        dealNextHand(state, true);
-        return;
-      }
-      analytics.track('game_end');
-      setScreen('result');
-      return;
-    }
-    dealNextHand(state, false);
   }
 
   function handlePlayAgain() {
@@ -236,19 +283,18 @@ export default function App() {
   }
 
   function renderActionArea() {
-    if (!state || showdownStage > 0) return null;
+    if (!state || showdownOpen) return null;
+    if (decisionReveal) return <ActionBar mode="waiting" message={S.DECISION_REVEAL_BANNER} />;
 
-    if (state.phase === 'decision1' && decision1AiFolds) {
-      return (
-        <ActionBar mode="decision" onStay={() => handleDecision1Choice(true)} onFold={() => handleDecision1Choice(false)} />
-      );
-    }
-
-    if (state.phase === 'decision2' && decision2AiFolds) {
+    if ((state.phase === 'decision1' || state.phase === 'decision2') && aiFolds) {
       const human = state.players.find((p) => p.isHuman)!;
       if (human.folded) return <ActionBar mode="waiting" />;
       return (
-        <ActionBar mode="decision" onStay={() => handleDecision2Choice(true)} onFold={() => handleDecision2Choice(false)} />
+        <ActionBar
+          mode="decision"
+          onStay={() => handleDecisionChoice(true)}
+          onFold={() => handleDecisionChoice(false)}
+        />
       );
     }
 
@@ -291,7 +337,7 @@ export default function App() {
               state={state}
               emotes={emotes}
               actingPlayerId={state.phase === 'exchange' ? exchangeQueue[0] : undefined}
-              showdownStage={showdownStage}
+              decisionReveal={decisionReveal}
             />
             {renderActionArea()}
             <div className="app__log">
@@ -301,10 +347,11 @@ export default function App() {
                 </div>
               ))}
             </div>
-            {showdownStage > 0 && (
+            {decisionReveal && <div className="revealBanner">{S.DECISION_REVEAL_BANNER}</div>}
+            {toast && <div className="toast">{toast}</div>}
+            {showdownOpen && (
               <ShowdownReveal
                 state={state}
-                stage={showdownStage}
                 onContinue={handleNextHand}
                 isFinalHand={isGameOver(state) && gameWinners(state).length === 1}
               />

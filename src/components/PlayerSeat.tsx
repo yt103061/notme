@@ -1,20 +1,19 @@
 import type { PlayerState } from '../engine/game';
-import { CardView, type CardVariant } from './CardView';
+import { CardView } from './CardView';
+import * as S from '../strings';
 
 const AVATAR: Record<number, string> = { 0: '🙂', 1: '🔥', 2: '🛡️', 3: '🎭' };
 
 interface PlayerSeatProps {
   player: PlayerState;
   emote?: string;
-  /** 0=未公開 1=フリップ中演出 2=公開済み */
-  showdownStage?: 0 | 1 | 2;
   isActingNow?: boolean;
+  /** せーの同時公開バッジ。'stay' | 'fold' */
+  decisionBadge?: 'stay' | 'fold';
+  badgeDelaySec?: number;
 }
 
-export function PlayerSeat({ player, emote, showdownStage = 0, isActingNow }: PlayerSeatProps) {
-  const revealed = showdownStage >= 1;
-  const notMeVariant: CardVariant = player.isHuman && !revealed ? 'hiddenSelf' : 'faceUp';
-
+export function PlayerSeat({ player, emote, isActingNow, decisionBadge, badgeDelaySec = 0 }: PlayerSeatProps) {
   return (
     <div
       className={['seat', player.folded ? 'seat--folded' : '', isActingNow ? 'seat--active' : '']
@@ -29,7 +28,11 @@ export function PlayerSeat({ player, emote, showdownStage = 0, isActingNow }: Pl
         <span className="seat__score">{player.score}</span>
       </div>
 
-      {emote && <div className="seat__emote">{emote}</div>}
+      {emote && !player.folded && (
+        <div key={emote} className="seat__emote">
+          {emote}
+        </div>
+      )}
 
       <div className="seat__cards">
         {player.isHuman ? (
@@ -42,15 +45,23 @@ export function PlayerSeat({ player, emote, showdownStage = 0, isActingNow }: Pl
         )}
         <CardView
           card={player.notMe}
-          variant={notMeVariant}
+          variant={player.isHuman ? 'hiddenSelf' : 'faceUp'}
           size="sm"
-          highlighted={!player.isHuman || revealed}
-          flipping={player.isHuman && showdownStage === 1}
+          highlighted={!player.isHuman}
         />
       </div>
 
       {player.isHuman && player.hint && <div className="seat__hint">ヒント: {player.hint.label}</div>}
       {player.folded && <div className="seat__foldedBadge">降り</div>}
+
+      {decisionBadge && (
+        <div
+          className={`seat__decision seat__decision--${decisionBadge}`}
+          style={{ animationDelay: `${badgeDelaySec}s` }}
+        >
+          {decisionBadge === 'stay' ? S.BADGE_STAY : S.BADGE_FOLD}
+        </div>
+      )}
     </div>
   );
 }

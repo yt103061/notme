@@ -1,6 +1,11 @@
 // vs AI 用の意思決定。モンテカルロで自分の推定勝率を出し、人格パラメータで残る/降りる/交換を決める。
 // AI は「自分視点で見える情報」だけを使う＝人間プレイヤーと同じ非対称情報の下で判断するため、
 // AI の挙動そのものが読み合いのシグナルになる。
+//
+// チューニング方針：ショーダウンこそがこのゲームの最大の報酬（not me 開示の瞬間）なので、
+// AI は「基本は勝負を受ける」側に寄せる。4人戦の平均勝率は 0.25 であり、閾値はそれを下回るように
+// 設定して「明らかに負けている時だけ降りる」挙動にする。交換に投資したハンドは降りにくくなる
+// （人間のサンクコスト心理の再現＝行動が読みやすくなり、かつ試合が動く）。
 
 import { type Card, type Rng, createDeck, shuffle, cardKey } from './cards';
 import { evaluateFive, compareHands } from './evaluator';
@@ -11,10 +16,14 @@ export type PersonalityId = 'aggressive' | 'steady' | 'tricky';
 export interface Personality {
   id: PersonalityId;
   name: string;
-  /** この推定勝率を下回ったら降りる（ノイズ加算前のベースライン） */
-  stayThreshold: number;
+  /** 場札公開前（①降り判断）の残留閾値。低いほど勝負を受ける */
+  stayThresholdPreFlop: number;
+  /** 場札公開後（②降り判断）の残留閾値 */
+  stayThresholdPostFlop: number;
   /** 交換フェーズで相手の not me を奪いに行く積極性 0-1 */
   stealAggressiveness: number;
+  /** 奪う価値があると感じる notMe の最低ランク */
+  stealMinRank: number;
   /** 判断に乗せるランダムなゆらぎ（ブラフ・誤判断の余地） */
   bluffVariance: number;
 }
@@ -23,25 +32,34 @@ export const PERSONALITIES: Record<PersonalityId, Personality> = {
   aggressive: {
     id: 'aggressive',
     name: '強気',
-    stayThreshold: 0.36,
-    stealAggressiveness: 0.75,
-    bluffVariance: 0.12,
+    stayThresholdPreFlop: 0.12,
+    stayThresholdPostFlop: 0.24,
+    stealAggressiveness: 0.8,
+    stealMinRank: 8,
+    bluffVariance: 0.1,
   },
   steady: {
     id: 'steady',
     name: '堅実',
-    stayThreshold: 0.52,
-    stealAggressiveness: 0.3,
-    bluffVariance: 0.05,
+    stayThresholdPreFlop: 0.2,
+    stayThresholdPostFlop: 0.34,
+    stealAggressiveness: 0.35,
+    stealMinRank: 11,
+    bluffVariance: 0.06,
   },
   tricky: {
     id: 'tricky',
     name: 'トリッキー',
-    stayThreshold: 0.45,
-    stealAggressiveness: 0.55,
-    bluffVariance: 0.22,
+    stayThresholdPreFlop: 0.15,
+    stayThresholdPostFlop: 0.28,
+    stealAggressiveness: 0.6,
+    stealMinRank: 9,
+    bluffVariance: 0.18,
   },
 };
+
+/** 交換に投資済みのハンドは降りにくくなる（サンクコスト心理の再現） */
+const SUNK_COST_BONUS = 0.05;
 
 function hintFilter(hint: Hint | null): (c: Card) => boolean {
   if (!hint) return () => true;
@@ -122,34 +140,36 @@ export function estimateWinProbability(
 
 const TRIALS = 300;
 
+export interface FoldDecision {
+  fold: boolean;
+  winProb: number;
+}
+
+/** round=1 は場札公開前、round=2 は場札公開後の降り判断 */
+export function decideFoldWithEquity(
+  state: GameState,
+  playerId: number,
+  personality: Personality,
+  rng: Rng,
+  round: 1 | 2 = 2,
+): FoldDecision {
+  const winProb = estimateWinProbability(state, playerId, TRIALS, rng);
+  const player = state.players.find((p) => p.id === playerId);
+  let threshold =
+    round === 1 ? personality.stayThresholdPreFlop : personality.stayThresholdPostFlop;
+  if (player?.usedExchange) threshold -= SUNK_COST_BONUS;
+  const noise = (rng() - 0.5) * 2 * personality.bluffVariance;
+  return { fold: winProb + noise < threshold, winProb };
+}
+
 export function decideFold(
   state: GameState,
   playerId: number,
   personality: Personality,
   rng: Rng,
+  round: 1 | 2 = 2,
 ): boolean {
-  const winProb = estimateWinProbability(state, playerId, TRIALS, rng);
-  const noise = (rng() - 0.5) * 2 * personality.bluffVariance;
-  return winProb + noise < personality.stayThreshold;
-}
-
-export interface FoldDecision {
-  fold: boolean;
-  emote: string;
-}
-
-/** decideFold と同じ判断ロジックに加え、UI 用の一言リアクションもまとめて返す */
-export function decideFoldWithEmote(
-  state: GameState,
-  playerId: number,
-  personality: Personality,
-  rng: Rng,
-): FoldDecision {
-  const winProb = estimateWinProbability(state, playerId, TRIALS, rng);
-  const noise = (rng() - 0.5) * 2 * personality.bluffVariance;
-  const fold = winProb + noise < personality.stayThreshold;
-  const emote = pickEmote(winProb, rng);
-  return { fold, emote: emote.text };
+  return decideFoldWithEquity(state, playerId, personality, rng, round).fold;
 }
 
 export function decideExchange(
@@ -159,7 +179,7 @@ export function decideExchange(
   rng: Rng,
 ): ExchangeAction {
   const winProb = estimateWinProbability(state, playerId, TRIALS, rng);
-  if (winProb > 0.62) return { type: 'pass' };
+  if (winProb > 0.65) return { type: 'pass' };
 
   const opponents = activePlayers(state).filter((p) => p.id !== playerId);
   if (opponents.length > 0 && rng() < personality.stealAggressiveness) {
@@ -167,24 +187,62 @@ export function decideExchange(
     for (const o of opponents) {
       if (o.notMe.rank > target.notMe.rank) target = o;
     }
-    if (target.notMe.rank >= 9) {
+    if (target.notMe.rank >= personality.stealMinRank) {
       return { type: 'steal', targetId: target.id };
     }
   }
-  if (winProb < 0.45) return { type: 'drawDeck' };
+  if (winProb < 0.42) return { type: 'drawDeck' };
   return { type: 'pass' };
 }
+
+// ----- リアクション（吹き出し） -----
+// AI の一言は「本当に見えている情報」に基づくのが原則。プレイヤーはそれを読んで
+// 自分の not me を逆算できる。トリッキーだけは時々逆のことを言う。
 
 export type EmoteMood = 'confident' | 'nervous' | 'neutral';
 
 const EMOTE_LINES: Record<EmoteMood, string[]> = {
-  confident: ['いい感じかも', 'これは残るしかない', 'ふふ、勝負する'],
-  nervous: ['うーん、微妙…', 'ちょっと弱気かも', '悩むところだね'],
-  neutral: ['どうしようかな', 'さて、どうする', '読めないな'],
+  confident: ['いい感じかも♪', 'これは勝負でしょ', 'ふふ、残るよ', '手応えあり…！'],
+  nervous: ['うーん、微妙…', 'これはキツいかも', '悩む〜…', '（そわそわ）'],
+  neutral: ['どうしよっかな', '読めない展開…', 'さて、どうする？', '静かだね…'],
 };
 
 export function pickEmote(winProb: number, rng: Rng): { mood: EmoteMood; text: string } {
-  const mood: EmoteMood = winProb >= 0.58 ? 'confident' : winProb <= 0.4 ? 'nervous' : 'neutral';
+  const mood: EmoteMood = winProb >= 0.5 ? 'confident' : winProb <= 0.32 ? 'nervous' : 'neutral';
   const lines = EMOTE_LINES[mood];
   return { mood, text: lines[Math.floor(rng() * lines.length)] };
+}
+
+const NOTME_STRONG_LINES = [
+  'うわ、いいカード見えてる…',
+  'それ、自分だけ知らないんだよね…ふふ',
+  'ちょっと羨ましいかも',
+  '（あのカードは強い…）',
+];
+const NOTME_MID_LINES = ['ふーん、なるほどね', 'なんとも言えないカード', 'びみょ〜なライン'];
+const NOTME_WEAK_LINES = [
+  'ぷぷ、なんか和むカード',
+  'あらら…',
+  '見えてないほうが幸せかもよ？',
+  '（チャンスかも）',
+];
+
+/** プレイヤーの notMe（AI には見えている）への一言。読み合いの主要シグナル */
+export function reactToVisibleNotMe(rank: number, personality: Personality, rng: Rng): string {
+  let pool: string[];
+  if (rank >= 12) pool = NOTME_STRONG_LINES;
+  else if (rank >= 7) pool = NOTME_MID_LINES;
+  else pool = NOTME_WEAK_LINES;
+
+  // トリッキーは時々真逆の反応でかく乱してくる
+  if (personality.id === 'tricky' && rng() < 0.45) {
+    pool = pool === NOTME_STRONG_LINES ? NOTME_WEAK_LINES : pool === NOTME_WEAK_LINES ? NOTME_STRONG_LINES : pool;
+  }
+  return pool[Math.floor(rng() * pool.length)];
+}
+
+const STEAL_LINES = ['それ、もらい！', 'いいカードはいただくね', 'ごめんね〜？', 'これで形勢逆転…！'];
+
+export function pickStealLine(rng: Rng): string {
+  return STEAL_LINES[Math.floor(rng() * STEAL_LINES.length)];
 }

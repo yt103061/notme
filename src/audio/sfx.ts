@@ -1,6 +1,17 @@
 // 依存なしの軽量 WebAudio 効果音。AudioContext はユーザー操作後に遅延生成する。
 
-type SoundName = 'flip' | 'fold' | 'stay' | 'exchange' | 'win' | 'lose' | 'tap';
+type SoundName =
+  | 'flip'
+  | 'fold'
+  | 'stay'
+  | 'exchange'
+  | 'win'
+  | 'lose'
+  | 'tap'
+  | 'pop'
+  | 'deal'
+  | 'suspense'
+  | 'fanfare';
 
 class Sfx {
   private ctx: AudioContext | null = null;
@@ -63,6 +74,26 @@ class Sfx {
       case 'lose':
         this.tone(300, 0.15, 'sawtooth', 0.08);
         setTimeout(() => this.tone(220, 0.25, 'sawtooth', 0.08), 120);
+        break;
+      case 'pop':
+        this.tone(740, 0.07, 'triangle', 0.12);
+        break;
+      case 'deal':
+        this.tone(320, 0.05, 'square', 0.05);
+        setTimeout(() => this.tone(360, 0.05, 'square', 0.05), 70);
+        setTimeout(() => this.tone(400, 0.05, 'square', 0.05), 140);
+        break;
+      case 'suspense':
+        this.tone(150, 0.3, 'sine', 0.12);
+        setTimeout(() => this.tone(140, 0.35, 'sine', 0.12), 350);
+        setTimeout(() => this.tone(130, 0.45, 'sine', 0.14), 720);
+        break;
+      case 'fanfare':
+        this.tone(523, 0.12);
+        setTimeout(() => this.tone(659, 0.12), 110);
+        setTimeout(() => this.tone(784, 0.12), 220);
+        setTimeout(() => this.tone(1047, 0.3, 'sine', 0.18), 330);
+        setTimeout(() => this.tone(1319, 0.4, 'sine', 0.14), 480);
         break;
     }
   }
