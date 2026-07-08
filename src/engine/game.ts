@@ -30,6 +30,7 @@ export interface PlayerState {
   usedExchange: boolean;
   score: number;
   hint: Hint | null; // 現在の notMe についてのヒント。配札時に必ず1つ付与され、notMe が変わるたびに引き直す
+  stolenBy: number | null; // このハンドで自分の notMe を奪った相手の id（お互い奪い合いの検知用）
 }
 
 export type ExchangeAction =
@@ -68,6 +69,7 @@ export function createGame(rng: Rng, playerCount = 4): GameState {
     usedExchange: false,
     score: 0,
     hint: null,
+    stolenBy: null,
   }));
   return {
     players,
@@ -96,6 +98,7 @@ export function dealHand(state: GameState): GameState {
       usedExchange: false,
       // 配札時点で全員に自分の notMe についてのベースヒントを1つ与える
       hint: randomHint(notMe, state.rng),
+      stolenBy: null,
     };
   });
   // 場札の1枚目は配札と同時に公開する。判断材料ゼロでの①降り判断を避けるため
@@ -151,16 +154,39 @@ export function applyExchange(state: GameState, actorId: number, action: Exchang
     const target = players.find((p) => p.id === action.targetId);
     if (!target || target.id === actor.id || target.folded) return state;
 
-    // 「奪う」は対称的な交換：actor と target の notMe を直接入れ替える
-    const actorOld = actor.notMe;
-    const targetOld = target.notMe;
-    actor.notMe = targetOld;
-    target.notMe = actorOld;
-    actor.usedExchange = true;
+    if (actor.stolenBy === target.id) {
+      // お互い奪い合いの特殊ケース：target が先にこのハンドで actor から奪っていた
+      // （A→B の後の B→A）。二重にペナルティ／補充を重ねると挙動が読みにくくなるため、
+      // このケースだけは単純に現在の notMe を交換する形で決着する
+      const actorOld = actor.notMe;
+      const targetOld = target.notMe;
+      actor.notMe = targetOld;
+      target.notMe = actorOld;
+      actor.usedExchange = true;
+      actor.hint = randomHint(actor.notMe, state.rng);
+      target.hint = randomHint(target.notMe, state.rng);
+      actor.stolenBy = null;
+    } else {
+      // 通常時は一方的な略奪：actor が target の notMe を奪う
+      const stolen = target.notMe;
+      // 奪った側のペナルティ：手札1枚をランダムに山札交換（見ずに引き替え）
+      const idx = Math.floor(state.rng() * actor.hole.length);
+      const replaced = deck.shift();
+      if (replaced) {
+        deck.push(actor.hole[idx]);
+        actor.hole = actor.hole.map((c, i) => (i === idx ? replaced : c));
+      }
+      actor.notMe = stolen;
+      actor.usedExchange = true;
+      target.stolenBy = actor.id;
 
-    // 双方とも notMe が変わったので、ヒントを新しい札に合わせて引き直す
-    actor.hint = randomHint(actor.notMe, state.rng);
-    target.hint = randomHint(target.notMe, state.rng);
+      // 奪われた側の補填：新しい notMe とヒント
+      const refill = deck.shift();
+      if (refill) {
+        target.notMe = refill;
+        target.hint = randomHint(refill, state.rng);
+      }
+    }
   }
   // pass は何もしない
 

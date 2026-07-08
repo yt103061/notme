@@ -18,6 +18,7 @@ function player(id: number, hole: Card[], notMe: Card, extra: Partial<PlayerStat
     usedExchange: false,
     score: 0,
     hint: null,
+    stolenBy: null,
     ...extra,
   };
 }

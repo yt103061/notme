@@ -63,29 +63,63 @@ export default function App() {
    * 自分が当事者（actor/target）なら、自分が手放した「元のnot me」は相手のものになった瞬間に
    * 見える情報になるので、そのカードを開示する。新しく受け取った札は引き続き自分からは見えない。
    */
+  /** 奪った側の手札ペナルティで実際にどちらの1枚が入れ替わったかを前後比較で特定する（一方的な略奪の時のみ発生） */
+  function findHolePenalty(prev: GameState, next: GameState, actorId: number) {
+    const before = prev.players.find((p) => p.id === actorId)!.hole;
+    const after = next.players.find((p) => p.id === actorId)!.hole;
+    for (let i = 0; i < before.length; i++) {
+      if (before[i].suit !== after[i].suit || before[i].rank !== after[i].rank) {
+        return { index: i as 0 | 1, before: before[i], after: after[i] };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 奪う：prev（適用前）を見て、target が既に actor から奪われていた（＝お互い奪い合いの
+   * 特殊ケース）かどうかを判定し、演出データを組み立てる。
+   * - お互い奪い合いの場合：単純な notMe 交換として演出する（山札もペナルティも関与しない）
+   * - 通常時：actor が target の notMe を一方的に奪う。奪われた側にはヒント、奪った側には
+   *   手札ペナルティを明示する
+   */
   function buildStealEvent(prev: GameState, next: GameState, actorId: number, targetId: number): ExchangeEventData {
     const actorBefore = prev.players.find((p) => p.id === actorId)!;
     const targetBefore = prev.players.find((p) => p.id === targetId)!;
     const actorAfter = next.players.find((p) => p.id === actorId)!;
     const targetAfter = next.players.find((p) => p.id === targetId)!;
 
-    const perspective: 'actor' | 'target' | 'spectator' = actorBefore.isHuman
-      ? 'actor'
-      : targetBefore.isHuman
-        ? 'target'
-        : 'spectator';
+    if (actorBefore.stolenBy === targetId) {
+      // お互い奪い合いの特殊ケース
+      const perspective: 'actor' | 'target' | 'spectator' = actorBefore.isHuman
+        ? 'actor'
+        : targetBefore.isHuman
+          ? 'target'
+          : 'spectator';
+      return {
+        type: 'steal',
+        mode: 'reciprocalSwap',
+        actorName: actorBefore.name,
+        targetName: targetBefore.name,
+        perspective,
+        yourOldCard:
+          perspective === 'actor' ? targetAfter.notMe : perspective === 'target' ? actorAfter.notMe : null,
+        spectatorCards:
+          perspective === 'spectator'
+            ? { actorOldCard: actorBefore.notMe, targetOldCard: targetBefore.notMe }
+            : null,
+      };
+    }
 
     return {
       type: 'steal',
+      mode: 'oneSided',
       actorName: actorBefore.name,
       targetName: targetBefore.name,
-      perspective,
-      yourOldCard:
-        perspective === 'actor' ? targetAfter.notMe : perspective === 'target' ? actorAfter.notMe : null,
-      spectatorCards:
-        perspective === 'spectator'
-          ? { actorOldCard: actorBefore.notMe, targetOldCard: targetBefore.notMe }
-          : null,
+      actorIsHuman: actorBefore.isHuman,
+      targetIsHuman: targetBefore.isHuman,
+      revealedCard: actorBefore.isHuman ? null : targetBefore.notMe,
+      hint: targetAfter.hint,
+      holePenalty: actorBefore.isHuman ? findHolePenalty(prev, next, actorId) : null,
     };
   }
 
@@ -291,10 +325,14 @@ export default function App() {
     const actor = current.players.find((p) => p.id === actorId)!;
     if (action.type === 'pass') appendLog(S.EXCHANGE_PASS_LOG(actor.name));
     else if (action.type === 'drawDeck') appendLog(S.EXCHANGE_DECK_LOG(actor.name));
-    else
+    else {
+      const target = current.players.find((p) => p.id === action.targetId)!;
       appendLog(
-        S.EXCHANGE_STEAL_LOG(actor.name, current.players.find((p) => p.id === action.targetId)!.name),
+        actor.stolenBy === target.id
+          ? S.RECIPROCAL_STEAL_LOG(actor.name, target.name)
+          : S.EXCHANGE_STEAL_LOG(actor.name, target.name),
       );
+    }
   }
 
   function handleHumanExchange(action: ExchangeAction) {

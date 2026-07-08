@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Card } from '../engine/cards';
+import type { Hint } from '../engine/game';
 import { CardView } from './CardView';
 import { FlipCard } from './FlipCard';
 import * as S from '../strings';
@@ -7,6 +8,21 @@ import * as S from '../strings';
 export type ExchangeEventData =
   | {
       type: 'steal';
+      mode: 'oneSided';
+      actorName: string;
+      targetName: string;
+      actorIsHuman: boolean;
+      targetIsHuman: boolean;
+      /** 奪った札。actorIsHuman の場合は自分のnot me化して見えなくなるため非公開(null) */
+      revealedCard: Card | null;
+      /** 奪われた側が補充で得たヒント（targetIsHuman の時だけ意味を持つ） */
+      hint: Hint | null;
+      /** 奪った側の手札ペナルティ（actorIsHuman の時だけ意味を持つ） */
+      holePenalty: { index: 0 | 1; before: Card; after: Card } | null;
+    }
+  | {
+      type: 'steal';
+      mode: 'reciprocalSwap';
       actorName: string;
       targetName: string;
       /** 今この画面を見ている人間が、この交換でどの役だったか */
@@ -35,8 +51,10 @@ export function ExchangeEvent({ event, onDismiss }: ExchangeEventProps) {
 
   useEffect(() => {
     const flipTimer = window.setTimeout(() => setFlipped(true), 180);
-    const isBigMoment = event.type === 'steal' && event.perspective !== 'spectator';
-    const dismissTimer = window.setTimeout(onDismiss, isBigMoment ? 3000 : 2400);
+    const isBigMoment =
+      (event.type === 'steal' && event.mode === 'oneSided' && (event.targetIsHuman || event.actorIsHuman)) ||
+      (event.type === 'steal' && event.mode === 'reciprocalSwap' && event.perspective !== 'spectator');
+    const dismissTimer = window.setTimeout(onDismiss, isBigMoment ? 3200 : 2400);
     return () => {
       window.clearTimeout(flipTimer);
       window.clearTimeout(dismissTimer);
@@ -44,18 +62,58 @@ export function ExchangeEvent({ event, onDismiss }: ExchangeEventProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (event.type === 'steal') {
+  if (event.type === 'steal' && event.mode === 'oneSided') {
     return (
       <div className="exevent">
-        <div className={`exevent__panel ${event.perspective === 'target' ? 'exevent__panel--alert' : ''}`}>
-          <div className="exevent__icon">🔀</div>
+        <div className={`exevent__panel ${event.targetIsHuman ? 'exevent__panel--alert' : ''}`}>
+          <div className="exevent__icon">🫳</div>
           <p className="exevent__title">{S.EVENT_STEAL_TITLE}</p>
           <p className="exevent__headline">
-            {event.perspective === 'target'
+            {event.targetIsHuman
               ? S.EVENT_STEAL_FROM_YOU(event.actorName)
+              : S.EVENT_STEAL_LINE(event.actorName, event.targetName)}
+          </p>
+          <div className="exevent__cardRow">
+            {event.revealedCard ? (
+              <FlipCard card={event.revealedCard} revealed={flipped} size="md" glow />
+            ) : (
+              <CardView variant="hiddenSelf" size="md" />
+            )}
+          </div>
+          {!event.revealedCard && <p className="exevent__mystery">{S.EVENT_MYSTERY_NOTE}</p>}
+          {event.targetIsHuman && event.hint && (
+            <div className="exevent__hintBox">
+              <span className="exevent__hintLabel">{S.EVENT_HINT_GAINED}</span>
+              <span className="exevent__hintValue">{event.hint.label}</span>
+            </div>
+          )}
+          {event.actorIsHuman && event.holePenalty && (
+            <div className="exevent__penalty">
+              <span className="exevent__penaltyLabel">{S.EVENT_PENALTY_LABEL}</span>
+              <div className="exevent__cardRow exevent__cardRow--swap">
+                <CardView card={event.holePenalty.before} variant="faceUp" size="sm" />
+                <span className="exevent__arrow">→</span>
+                <FlipCard card={event.holePenalty.after} revealed={flipped} size="sm" />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (event.type === 'steal' && event.mode === 'reciprocalSwap') {
+    return (
+      <div className="exevent">
+        <div className="exevent__panel">
+          <div className="exevent__icon">🔀</div>
+          <p className="exevent__title">{S.EVENT_RECIPROCAL_TITLE}</p>
+          <p className="exevent__headline">
+            {event.perspective === 'target'
+              ? S.EVENT_RECIPROCAL_FROM_YOU(event.actorName)
               : event.perspective === 'actor'
-                ? S.EVENT_STEAL_LINE_YOU(event.targetName)
-                : S.EVENT_STEAL_LINE(event.actorName, event.targetName)}
+                ? S.EVENT_RECIPROCAL_LINE_YOU(event.targetName)
+                : S.EVENT_RECIPROCAL_LINE(event.actorName, event.targetName)}
           </p>
 
           {event.perspective === 'spectator' && event.spectatorCards ? (

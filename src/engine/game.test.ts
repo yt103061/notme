@@ -28,6 +28,7 @@ function basePlayer(id: number, hole: Card[], notMe: Card): PlayerState {
     usedExchange: false,
     score: 0,
     hint: null,
+    stolenBy: null,
   };
 }
 
@@ -103,29 +104,62 @@ describe('applyExchange', () => {
     expect(state.deck[state.deck.length - 1]).toEqual(c('C', 6));
   });
 
-  it('steal is a symmetric swap: actor and target directly trade notMe cards, no deck involved', () => {
-    let state = setupState([c('H', 2), c('S', 8)]); // deck untouched by a steal, kept for sanity
-    const deckBefore = state.deck.length;
+  it('steal takes target notMe, penalizes actor hole, refills target with a hint (default one-sided steal)', () => {
+    const holeReplacement = c('H', 2);
+    const targetRefill = c('S', 8);
+    let state = setupState([holeReplacement, targetRefill]);
 
-    const originalActorNotMe = state.players.find((p) => p.id === 0)!.notMe;
     const originalTargetNotMe = state.players.find((p) => p.id === 1)!.notMe;
-    const originalActorHole = state.players.find((p) => p.id === 0)!.hole;
-
     state = applyExchange(state, 0, { type: 'steal', targetId: 1 });
 
     const actor = state.players.find((p) => p.id === 0)!;
     const target = state.players.find((p) => p.id === 1)!;
 
     expect(actor.notMe).toEqual(originalTargetNotMe);
-    expect(target.notMe).toEqual(originalActorNotMe);
     expect(actor.usedExchange).toBe(true);
-    // 手札には一切ペナルティが無い（対称交換に変更したため）
-    expect(actor.hole).toEqual(originalActorHole);
-    // 双方ともヒントが新しい notMe に合わせて引き直される
+    expect(actor.hole).toContainEqual(holeReplacement);
+    expect(actor.hole).toHaveLength(2);
+
+    expect(target.notMe).toEqual(targetRefill);
+    expect(target.hint).not.toBeNull();
+    // target が今後 actor から奪い返した時に相殺できるよう、誰に奪われたかを記録する
+    expect(target.stolenBy).toBe(0);
+  });
+
+  it('reciprocal steal (B steals back from A within the same hand) resolves as a clean swap, no penalty stacking', () => {
+    // まず 0(A) が 1(B) から奪う（通常の一方的な略奪）
+    let state = setupState([c('H', 2), c('S', 8)]);
+    state = applyExchange(state, 0, { type: 'steal', targetId: 1 });
+
+    const afterFirstSteal = state.players.find((p) => p.id === 1)!;
+    expect(afterFirstSteal.stolenBy).toBe(0); // A に奪われたことを記録済み
+
+    const cardsBeforeSecondSteal = {
+      actorNotMe: state.players.find((p) => p.id === 1)!.notMe, // B の現在の notMe（山札補充分）
+      targetNotMe: state.players.find((p) => p.id === 0)!.notMe, // A の現在の notMe（B から奪ったもの）
+    };
+    const actorHoleBefore = state.players.find((p) => p.id === 1)!.hole;
+    const deckBefore = state.deck.length;
+
+    // 次に 1(B) が 0(A) から奪い返す → お互い様の特殊ケース
+    state = applyExchange(state, 1, { type: 'steal', targetId: 0 });
+
+    const actor = state.players.find((p) => p.id === 1)!; // B
+    const target = state.players.find((p) => p.id === 0)!; // A
+
+    // 単純な現在の notMe 交換になる（山札には触れない）
+    expect(actor.notMe).toEqual(cardsBeforeSecondSteal.targetNotMe);
+    expect(target.notMe).toEqual(cardsBeforeSecondSteal.actorNotMe);
+    expect(actor.usedExchange).toBe(true);
+    // 手札ペナルティは発生しない
+    expect(actor.hole).toEqual(actorHoleBefore);
+    // 山札も一切関与しない
+    expect(state.deck).toHaveLength(deckBefore);
+    // 双方ヒントが引き直される
     expect(actor.hint).not.toBeNull();
     expect(target.hint).not.toBeNull();
-    // 山札は交換に一切関与しない
-    expect(state.deck).toHaveLength(deckBefore);
+    // 相殺済みなのでフラグはクリアされる
+    expect(actor.stolenBy).toBeNull();
   });
 
   it('steal does nothing if target is folded', () => {
