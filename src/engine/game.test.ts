@@ -45,6 +45,8 @@ describe('dealHand', () => {
       expect(p.hole).toHaveLength(2);
       expect(p.folded).toBe(false);
       expect(p.usedExchange).toBe(false);
+      // 配札時点で全員に自分のnotMeについてのベースヒントが1つ与えられる
+      expect(p.hint).not.toBeNull();
     }
     // 52 - (2+1)*4 - 場札1 = 39
     expect(state.deck).toHaveLength(39);
@@ -89,35 +91,41 @@ describe('applyExchange', () => {
     };
   }
 
-  it('drawDeck replaces own notMe unseen and is irreversible (marks usedExchange)', () => {
+  it('drawDeck replaces own notMe unseen, refreshes the hint, and is irreversible', () => {
     const newCard = c('D', 14);
     let state = setupState([newCard, c('S', 2), c('S', 3)]);
     state = applyExchange(state, 0, { type: 'drawDeck' });
     const actor = state.players.find((p) => p.id === 0)!;
     expect(actor.notMe).toEqual(newCard);
     expect(actor.usedExchange).toBe(true);
+    expect(actor.hint).not.toBeNull();
     // old notMe (C6) pushed to bottom of deck
     expect(state.deck[state.deck.length - 1]).toEqual(c('C', 6));
   });
 
-  it('steal takes target notMe, penalizes actor hole, refills target with a hint', () => {
-    const holeReplacement = c('H', 2);
-    const targetRefill = c('S', 8); // even, <8? rank 8 -> range hint '8以上'
-    let state = setupState([holeReplacement, targetRefill]);
+  it('steal is a symmetric swap: actor and target directly trade notMe cards, no deck involved', () => {
+    let state = setupState([c('H', 2), c('S', 8)]); // deck untouched by a steal, kept for sanity
+    const deckBefore = state.deck.length;
 
+    const originalActorNotMe = state.players.find((p) => p.id === 0)!.notMe;
     const originalTargetNotMe = state.players.find((p) => p.id === 1)!.notMe;
+    const originalActorHole = state.players.find((p) => p.id === 0)!.hole;
+
     state = applyExchange(state, 0, { type: 'steal', targetId: 1 });
 
     const actor = state.players.find((p) => p.id === 0)!;
     const target = state.players.find((p) => p.id === 1)!;
 
     expect(actor.notMe).toEqual(originalTargetNotMe);
+    expect(target.notMe).toEqual(originalActorNotMe);
     expect(actor.usedExchange).toBe(true);
-    expect(actor.hole).toContainEqual(holeReplacement);
-    expect(actor.hole).toHaveLength(2);
-
-    expect(target.notMe).toEqual(targetRefill);
+    // 手札には一切ペナルティが無い（対称交換に変更したため）
+    expect(actor.hole).toEqual(originalActorHole);
+    // 双方ともヒントが新しい notMe に合わせて引き直される
+    expect(actor.hint).not.toBeNull();
     expect(target.hint).not.toBeNull();
+    // 山札は交換に一切関与しない
+    expect(state.deck).toHaveLength(deckBefore);
   });
 
   it('steal does nothing if target is folded', () => {

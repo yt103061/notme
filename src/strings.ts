@@ -32,10 +32,10 @@ export const SUDDEN_DEATH_BADGE = 'サドンデス';
 export const ACTION_STAY = '残る';
 export const ACTION_FOLD = '降りる';
 export const ACTION_EXCHANGE_DECK = '山札と交換';
-export const ACTION_EXCHANGE_STEAL = 'not meを奪う';
+export const ACTION_EXCHANGE_STEAL = '相手とnot meを交換';
 export const ACTION_EXCHANGE_PASS = '交換しない';
 export const ACTION_BACK = 'もどる';
-export const PICK_STEAL_TARGET = '誰から奪う？';
+export const PICK_STEAL_TARGET = '誰と交換する？';
 
 export const YOUR_TURN_DECIDE = 'あなたの番：残る？降りる？';
 export const YOUR_TURN_EXCHANGE = 'あなたの番：not meを交換する？';
@@ -85,9 +85,10 @@ export const HELP_RULES_SECTION = 'ルール早見';
 export const HELP_RULE_LINES = [
   '5枚（手札2＋not me 1＋場札2）でポーカーの役を作る。',
   '「not me」は自分だけ見えない。相手のnot meはあなたに見えている。',
-  '相手の反応と行動から、自分のnot meの強さを逆算しよう。',
-  '流れ：配札（場札1枚目公開）→ ①残る/降りる → 交換（山札交換/奪う/パス を1回まで）→ 場札2枚目公開 → ②残る/降りる → ショーダウン。',
-  '奪われたら新しいnot meが補充され、ヒントが1つもらえる。',
+  '配札時、自分のnot meについてのヒントが1つ必ずもらえる（偶数/奇数、7以上/以下など）。',
+  '相手の反応と行動、そしてヒントから、自分のnot meの強さを逆算しよう。',
+  '流れ：配札（場札1枚目公開）→ ①残る/降りる → 交換（山札交換/交換する/パス を1回まで）→ 場札2枚目公開 → ②残る/降りる → ショーダウン。',
+  '「交換する」は相手と自分のnot meを直接入れ替える。入れ替えた瞬間、自分の元のnot meは相手のものになり中身が見える。新しいヒントも引き直される。',
 ];
 export const HELP_SCORING_SECTION = '得点';
 export const HELP_SCORE_ROWS: [string, string][] = [
@@ -102,20 +103,20 @@ export const HELP_SOUND_LABEL = '効果音';
 export const HELP_CLOSE = '閉じる';
 
 // --- 交換フェーズの事件演出（ExchangeEvent） ---
-export const EVENT_STEAL_TITLE = '強奪！';
-export const EVENT_STEAL_FROM_YOU = (actor: string) => `${actor}が、あなたのnot meを奪った！`;
-export const EVENT_STEAL_LINE = (actor: string, target: string) => `${actor}が${target}のnot meを奪った！`;
-export const EVENT_HINT_GAINED = 'ヒント獲得';
-export const EVENT_PENALTY_LABEL = 'ペナルティ：手札の1枚が山札と交換された';
+export const EVENT_STEAL_TITLE = 'not me交換！';
+export const EVENT_STEAL_FROM_YOU = (actor: string) => `${actor}が、あなたとnot meを交換した！`;
+export const EVENT_STEAL_LINE_YOU = (target: string) => `あなたが${target}とnot meを交換した！`;
+export const EVENT_STEAL_LINE = (actor: string, target: string) => `${actor}が${target}とnot meを交換した`;
+export const EVENT_YOUR_OLD_CARD = 'あなたの元のnot me、正体は…';
 export const EVENT_SWAP_TITLE = '山札交換';
 export const EVENT_SWAP_LINE = (actor: string) => `${actor}が山札とnot meを交換した`;
 export const EVENT_SWAP_LINE_YOU = 'あなたは山札とnot meを交換した（中身は見えないまま）';
-export const EVENT_MYSTERY_NOTE = '（自分のnot meはまだ見えない）';
+export const EVENT_MYSTERY_NOTE = '（新しいnot meはまだ見えない）';
 
 export const FOLD_LOG = (name: string) => `${name}が降りた`;
 export const EXCHANGE_PASS_LOG = (name: string) => `${name}は交換しなかった`;
 export const EXCHANGE_DECK_LOG = (name: string) => `${name}が山札とnot meを交換した`;
 export const EXCHANGE_STEAL_LOG = (actor: string, target: string) =>
-  `${actor}が${target}のnot meを奪った`;
+  `${actor}が${target}とnot meを交換した`;
 export const WALKOVER_LOG = (name: string) => `${name}の不戦勝！`;
 export const MUTUAL_FOLD_LOG = '全員降りて流局';

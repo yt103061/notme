@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import type { Card } from '../engine/cards';
-import type { Hint } from '../engine/game';
 import { CardView } from './CardView';
 import { FlipCard } from './FlipCard';
 import * as S from '../strings';
@@ -10,14 +9,12 @@ export type ExchangeEventData =
       type: 'steal';
       actorName: string;
       targetName: string;
-      actorIsHuman: boolean;
-      targetIsHuman: boolean;
-      /** 奪った側から見て見える札。actorIsHuman の場合は自分のnot meになるため非公開(null) */
-      revealedCard: Card | null;
-      /** 奪われた側が補充で得たヒント（targetIsHuman の時だけ意味を持つ） */
-      hint: Hint | null;
-      /** 奪った側のペナルティで山札と入れ替わった手札（actorIsHuman の時だけ意味を持つ） */
-      holePenalty: { index: 0 | 1; before: Card; after: Card } | null;
+      /** 今この画面を見ている人間が、この交換でどの役だったか */
+      perspective: 'actor' | 'target' | 'spectator';
+      /** perspective が actor/target の時：自分が元々持っていて相手に渡った札（渡った瞬間に見える情報になる） */
+      yourOldCard: Card | null;
+      /** perspective が spectator（AI同士）の時：もともと公開情報なのでそのまま両方見せる */
+      spectatorCards: { actorOldCard: Card; targetOldCard: Card } | null;
     }
   | {
       type: 'deckSwap';
@@ -38,9 +35,8 @@ export function ExchangeEvent({ event, onDismiss }: ExchangeEventProps) {
 
   useEffect(() => {
     const flipTimer = window.setTimeout(() => setFlipped(true), 180);
-    const isBigMoment =
-      event.type === 'steal' && (event.targetIsHuman || (event.actorIsHuman && !!event.holePenalty));
-    const dismissTimer = window.setTimeout(onDismiss, isBigMoment ? 3200 : 2400);
+    const isBigMoment = event.type === 'steal' && event.perspective !== 'spectator';
+    const dismissTimer = window.setTimeout(onDismiss, isBigMoment ? 3000 : 2400);
     return () => {
       window.clearTimeout(flipTimer);
       window.clearTimeout(dismissTimer);
@@ -51,37 +47,31 @@ export function ExchangeEvent({ event, onDismiss }: ExchangeEventProps) {
   if (event.type === 'steal') {
     return (
       <div className="exevent">
-        <div className={`exevent__panel ${event.targetIsHuman ? 'exevent__panel--alert' : ''}`}>
-          <div className="exevent__icon">🫳</div>
+        <div className={`exevent__panel ${event.perspective === 'target' ? 'exevent__panel--alert' : ''}`}>
+          <div className="exevent__icon">🔀</div>
           <p className="exevent__title">{S.EVENT_STEAL_TITLE}</p>
           <p className="exevent__headline">
-            {event.targetIsHuman
+            {event.perspective === 'target'
               ? S.EVENT_STEAL_FROM_YOU(event.actorName)
-              : S.EVENT_STEAL_LINE(event.actorName, event.targetName)}
+              : event.perspective === 'actor'
+                ? S.EVENT_STEAL_LINE_YOU(event.targetName)
+                : S.EVENT_STEAL_LINE(event.actorName, event.targetName)}
           </p>
-          <div className="exevent__cardRow">
-            {event.revealedCard ? (
-              <FlipCard card={event.revealedCard} revealed={flipped} size="md" glow />
-            ) : (
-              <CardView variant="hiddenSelf" size="md" />
-            )}
-          </div>
-          {!event.revealedCard && <p className="exevent__mystery">{S.EVENT_MYSTERY_NOTE}</p>}
-          {event.targetIsHuman && event.hint && (
-            <div className="exevent__hintBox">
-              <span className="exevent__hintLabel">{S.EVENT_HINT_GAINED}</span>
-              <span className="exevent__hintValue">{event.hint.label}</span>
+
+          {event.perspective === 'spectator' && event.spectatorCards ? (
+            <div className="exevent__cardRow exevent__cardRow--swap">
+              <CardView card={event.spectatorCards.actorOldCard} variant="faceUp" size="sm" />
+              <span className="exevent__arrow">⇄</span>
+              <CardView card={event.spectatorCards.targetOldCard} variant="faceUp" size="sm" />
             </div>
-          )}
-          {event.actorIsHuman && event.holePenalty && (
-            <div className="exevent__penalty">
-              <span className="exevent__penaltyLabel">{S.EVENT_PENALTY_LABEL}</span>
-              <div className="exevent__cardRow exevent__cardRow--swap">
-                <CardView card={event.holePenalty.before} variant="faceUp" size="sm" />
-                <span className="exevent__arrow">→</span>
-                <FlipCard card={event.holePenalty.after} revealed={flipped} size="sm" />
+          ) : (
+            <>
+              <p className="exevent__subLabel">{S.EVENT_YOUR_OLD_CARD}</p>
+              <div className="exevent__cardRow">
+                <FlipCard card={event.yourOldCard!} revealed={flipped} size="md" glow />
               </div>
-            </div>
+              <p className="exevent__mystery">{S.EVENT_MYSTERY_NOTE}</p>
+            </>
           )}
         </div>
       </div>

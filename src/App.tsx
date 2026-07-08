@@ -58,34 +58,34 @@ export default function App() {
   const [muted, setMuted] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  /** 奪った側の手札ペナルティで実際にどちらの1枚が入れ替わったかを前後比較で特定する */
-  function findHolePenalty(prev: GameState, next: GameState, actorId: number) {
-    const before = prev.players.find((p) => p.id === actorId)!.hole;
-    const after = next.players.find((p) => p.id === actorId)!.hole;
-    for (let i = 0; i < before.length; i++) {
-      if (before[i].suit !== after[i].suit || before[i].rank !== after[i].rank) {
-        return { index: i as 0 | 1, before: before[i], after: after[i] };
-      }
-    }
-    return null;
-  }
-
-  /** 奪う: prev（適用前）と next（適用後）を見比べて演出データを組み立てる */
+  /**
+   * 奪う＝対称的な notMe 交換。prev（適用前）と next（適用後）を見比べて演出データを組み立てる。
+   * 自分が当事者（actor/target）なら、自分が手放した「元のnot me」は相手のものになった瞬間に
+   * 見える情報になるので、そのカードを開示する。新しく受け取った札は引き続き自分からは見えない。
+   */
   function buildStealEvent(prev: GameState, next: GameState, actorId: number, targetId: number): ExchangeEventData {
-    const actor = prev.players.find((p) => p.id === actorId)!;
-    const target = prev.players.find((p) => p.id === targetId)!;
+    const actorBefore = prev.players.find((p) => p.id === actorId)!;
+    const targetBefore = prev.players.find((p) => p.id === targetId)!;
+    const actorAfter = next.players.find((p) => p.id === actorId)!;
     const targetAfter = next.players.find((p) => p.id === targetId)!;
+
+    const perspective: 'actor' | 'target' | 'spectator' = actorBefore.isHuman
+      ? 'actor'
+      : targetBefore.isHuman
+        ? 'target'
+        : 'spectator';
+
     return {
       type: 'steal',
-      actorName: actor.name,
-      targetName: target.name,
-      actorIsHuman: actor.isHuman,
-      targetIsHuman: target.isHuman,
-      // 奪った札は actor が人間なら自分のnot me化して見えなくなる。それ以外は常に公開情報
-      revealedCard: actor.isHuman ? null : target.notMe,
-      hint: targetAfter.hint,
-      // 奪った側の手札ペナルティ。自分の手札は常に見えるので、何が起きたかを明示する
-      holePenalty: actor.isHuman ? findHolePenalty(prev, next, actorId) : null,
+      actorName: actorBefore.name,
+      targetName: targetBefore.name,
+      perspective,
+      yourOldCard:
+        perspective === 'actor' ? targetAfter.notMe : perspective === 'target' ? actorAfter.notMe : null,
+      spectatorCards:
+        perspective === 'spectator'
+          ? { actorOldCard: actorBefore.notMe, targetOldCard: targetBefore.notMe }
+          : null,
     };
   }
 

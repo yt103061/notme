@@ -29,7 +29,7 @@ export interface PlayerState {
   folded: boolean;
   usedExchange: boolean;
   score: number;
-  hint: Hint | null; // 直近で notMe を奪われた際に付与されるヒント（本人のみ表示）
+  hint: Hint | null; // 現在の notMe についてのヒント。配札時に必ず1つ付与され、notMe が変わるたびに引き直す
 }
 
 export type ExchangeAction =
@@ -94,7 +94,8 @@ export function dealHand(state: GameState): GameState {
       notMe,
       folded: false,
       usedExchange: false,
-      hint: null,
+      // 配札時点で全員に自分の notMe についてのベースヒントを1つ与える
+      hint: randomHint(notMe, state.rng),
     };
   });
   // 場札の1枚目は配札と同時に公開する。判断材料ゼロでの①降り判断を避けるため
@@ -143,29 +144,23 @@ export function applyExchange(state: GameState, actorId: number, action: Exchang
     if (newCard) {
       deck.push(actor.notMe);
       actor.notMe = newCard;
+      actor.hint = randomHint(newCard, state.rng);
     }
     actor.usedExchange = true;
   } else if (action.type === 'steal') {
     const target = players.find((p) => p.id === action.targetId);
     if (!target || target.id === actor.id || target.folded) return state;
 
-    const stolen = target.notMe;
-    // 奪った側のペナルティ：手札1枚をランダムに山札交換（見ずに引き替え）
-    const idx = Math.floor(state.rng() * actor.hole.length);
-    const replaced = deck.shift();
-    if (replaced) {
-      deck.push(actor.hole[idx]);
-      actor.hole = actor.hole.map((c, i) => (i === idx ? replaced : c));
-    }
-    actor.notMe = stolen;
+    // 「奪う」は対称的な交換：actor と target の notMe を直接入れ替える
+    const actorOld = actor.notMe;
+    const targetOld = target.notMe;
+    actor.notMe = targetOld;
+    target.notMe = actorOld;
     actor.usedExchange = true;
 
-    // 奪われた側の補填：新しい notMe とヒント
-    const refill = deck.shift();
-    if (refill) {
-      target.notMe = refill;
-      target.hint = randomHint(refill, state.rng);
-    }
+    // 双方とも notMe が変わったので、ヒントを新しい札に合わせて引き直す
+    actor.hint = randomHint(actor.notMe, state.rng);
+    target.hint = randomHint(target.notMe, state.rng);
   }
   // pass は何もしない
 
