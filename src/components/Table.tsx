@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import type { GameState } from '../engine/game';
 import { CardView } from './CardView';
+import { FlipCard } from './FlipCard';
 import { PlayerSeat } from './PlayerSeat';
+import { sfx } from '../audio/sfx';
 import { HAND_LABEL, SUDDEN_DEATH_BADGE } from '../strings';
 
 interface TableProps {
@@ -21,6 +24,19 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
   };
   const revealIds = decisionReveal ? Object.keys(decisionReveal).map(Number) : [];
   const badgeDelay = (id: number) => 0.25 + revealIds.indexOf(id) * 0.22;
+
+  // 場札は「配られてすぐ」ではなく「一拍おいてめくれる」演出にする（表示アクションを明示するため）
+  const [revealedCount, setRevealedCount] = useState(0);
+  useEffect(() => {
+    if (state.community.length > revealedCount) {
+      const t = window.setTimeout(() => {
+        setRevealedCount(state.community.length);
+        sfx.play('flip');
+      }, 320);
+      return () => window.clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.community.length]);
 
   return (
     <div className="table" key={`${state.handNumber}-${state.isSuddenDeath ? 'sd' : ''}`}>
@@ -43,15 +59,15 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
       </div>
 
       <div className="table__community">
-        {[0, 1].map((i) =>
-          state.community[i] ? (
-            <div key={i} className="table__flopCard" style={{ animationDelay: `${i * 0.18}s` }}>
-              <CardView card={state.community[i]} variant="faceUp" size="md" />
-            </div>
-          ) : (
-            <CardView key={i} variant="hiddenOpponent" size="md" />
-          ),
-        )}
+        {[0, 1].map((i) => (
+          <div key={i} className="table__flopSlot">
+            {i < state.community.length ? (
+              <FlipCard card={state.community[i]} revealed={i < revealedCount} size="md" />
+            ) : (
+              <CardView variant="hiddenOpponent" size="md" />
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="table__human">

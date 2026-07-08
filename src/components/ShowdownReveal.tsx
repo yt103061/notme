@@ -123,8 +123,13 @@ export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevea
                 >
                   <div className="showdown__rowHeader">
                     <span className="showdown__rowName">{p.name}</span>
-                    {step >= 4 && rank && (
-                      <span className="showdown__category">{S.CATEGORY_LABELS[rank.category]}</span>
+                    {step >= 1 && rank && (
+                      <span
+                        className="showdown__category"
+                        style={{ animationDelay: `${0.55 + oi * 0.18}s` }}
+                      >
+                        {S.CATEGORY_LABELS[rank.category]}
+                      </span>
                     )}
                     {step >= 4 && isWinner && <span className="showdown__winnerBadge">WIN</span>}
                   </div>

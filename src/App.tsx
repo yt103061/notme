@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   createGame,
   dealHand,
@@ -29,6 +29,7 @@ import { ActionBar } from './components/ActionBar';
 import { ShowdownReveal } from './components/ShowdownReveal';
 import { ResultScreen } from './components/ResultScreen';
 import { HelpModal } from './components/HelpModal';
+import { ExchangeEvent, type ExchangeEventData } from './components/ExchangeEvent';
 import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
 import * as S from './strings';
@@ -53,15 +54,52 @@ export default function App() {
   const [exchangeQueue, setExchangeQueue] = useState<number[]>([]);
   const [decisionReveal, setDecisionReveal] = useState<Record<number, boolean> | null>(null);
   const [showdownOpen, setShowdownOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [exchangeEvent, setExchangeEvent] = useState<ExchangeEventData | null>(null);
   const [muted, setMuted] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const toastTimer = useRef<number | null>(null);
 
-  function showToast(text: string) {
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    setToast(text);
-    toastTimer.current = window.setTimeout(() => setToast(null), 2400);
+  /** 奪った側の手札ペナルティで実際にどちらの1枚が入れ替わったかを前後比較で特定する */
+  function findHolePenalty(prev: GameState, next: GameState, actorId: number) {
+    const before = prev.players.find((p) => p.id === actorId)!.hole;
+    const after = next.players.find((p) => p.id === actorId)!.hole;
+    for (let i = 0; i < before.length; i++) {
+      if (before[i].suit !== after[i].suit || before[i].rank !== after[i].rank) {
+        return { index: i as 0 | 1, before: before[i], after: after[i] };
+      }
+    }
+    return null;
+  }
+
+  /** 奪う: prev（適用前）と next（適用後）を見比べて演出データを組み立てる */
+  function buildStealEvent(prev: GameState, next: GameState, actorId: number, targetId: number): ExchangeEventData {
+    const actor = prev.players.find((p) => p.id === actorId)!;
+    const target = prev.players.find((p) => p.id === targetId)!;
+    const targetAfter = next.players.find((p) => p.id === targetId)!;
+    return {
+      type: 'steal',
+      actorName: actor.name,
+      targetName: target.name,
+      actorIsHuman: actor.isHuman,
+      targetIsHuman: target.isHuman,
+      // 奪った札は actor が人間なら自分のnot me化して見えなくなる。それ以外は常に公開情報
+      revealedCard: actor.isHuman ? null : target.notMe,
+      hint: targetAfter.hint,
+      // 奪った側の手札ペナルティ。自分の手札は常に見えるので、何が起きたかを明示する
+      holePenalty: actor.isHuman ? findHolePenalty(prev, next, actorId) : null,
+    };
+  }
+
+  /** 山札交換: actor が人間なら前後とも非公開（本人には常に見えないため） */
+  function buildDeckSwapEvent(prev: GameState, next: GameState, actorId: number): ExchangeEventData {
+    const before = prev.players.find((p) => p.id === actorId)!;
+    const after = next.players.find((p) => p.id === actorId)!;
+    return {
+      type: 'deckSwap',
+      actorName: before.name,
+      actorIsHuman: before.isHuman,
+      revealedBefore: before.isHuman ? null : before.notMe,
+      revealedAfter: before.isHuman ? null : after.notMe,
+    };
   }
 
   /** そのラウンドの AI 全員の降り判断と勝率をまとめて計算 */
@@ -196,11 +234,12 @@ export default function App() {
 
   useEffect(() => {
     if (!state || state.phase !== 'exchange') return;
+    // イベントバナー表示中は次のアクションを開始しない（バナーを読む時間を確保する）
+    if (exchangeEvent) return;
 
     if (exchangeQueue.length === 0) {
       const timer = window.setTimeout(() => {
         const revealed = revealCommunity(state);
-        sfx.play('flip');
         const { folds, equities } = computeAiRound(revealed, 2);
 
         const newEmotes: Record<number, string> = {};
@@ -229,24 +268,24 @@ export default function App() {
     const timer = window.setTimeout(() => {
       const action = decideExchange(state, currentId, personalityFor(currentId), rng);
       appendExchangeLog(state, currentId, action);
+      const next = applyExchange(state, currentId, action);
+
       if (action.type === 'steal') {
         sfx.play('exchange');
         setEmotes((e) => ({ ...e, [currentId]: pickStealLine(rng) }));
-        const targetName = state.players.find((p) => p.id === action.targetId)!.name;
-        showToast(
-          action.targetId === 0
-            ? S.TOAST_STOLEN_FROM_YOU(actor.name)
-            : S.EXCHANGE_STEAL_LOG(actor.name, targetName),
-        );
+        setExchangeEvent(buildStealEvent(state, next, currentId, action.targetId));
       } else if (action.type === 'drawDeck') {
         sfx.play('exchange');
+        setExchangeEvent(buildDeckSwapEvent(state, next, currentId));
       }
-      setState(applyExchange(state, currentId, action));
+
+      // 進行自体は即座に。次のプレイヤーの手番はバナーが消えるまで上の早期returnで足止めされる
+      setState(next);
       setExchangeQueue((q) => q.slice(1));
     }, 950);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, exchangeQueue]);
+  }, [state, exchangeQueue, exchangeEvent]);
 
   function appendExchangeLog(current: GameState, actorId: number, action: ExchangeAction) {
     const actor = current.players.find((p) => p.id === actorId)!;
@@ -269,7 +308,15 @@ export default function App() {
           : 'exchange_pass',
     );
     appendExchangeLog(state, 0, action);
-    setState(applyExchange(state, 0, action));
+    const next = applyExchange(state, 0, action);
+
+    if (action.type === 'steal') {
+      setExchangeEvent(buildStealEvent(state, next, 0, action.targetId));
+    } else if (action.type === 'drawDeck') {
+      setExchangeEvent(buildDeckSwapEvent(state, next, 0));
+    }
+
+    setState(next);
     setExchangeQueue((q) => q.slice(1));
   }
 
@@ -287,6 +334,8 @@ export default function App() {
   function renderActionArea() {
     if (!state || showdownOpen) return null;
     if (decisionReveal) return <ActionBar mode="waiting" message={S.DECISION_REVEAL_BANNER} />;
+    // 事件バナー表示中は同じ手番のアクションを再度受け付けない
+    if (exchangeEvent) return <ActionBar mode="waiting" />;
 
     if ((state.phase === 'decision1' || state.phase === 'decision2') && aiFolds) {
       const human = state.players.find((p) => p.isHuman)!;
@@ -357,7 +406,9 @@ export default function App() {
               ))}
             </div>
             {decisionReveal && <div className="revealBanner">{S.DECISION_REVEAL_BANNER}</div>}
-            {toast && <div className="toast">{toast}</div>}
+            {exchangeEvent && (
+              <ExchangeEvent event={exchangeEvent} onDismiss={() => setExchangeEvent(null)} />
+            )}
             {showdownOpen && (
               <ShowdownReveal
                 state={state}

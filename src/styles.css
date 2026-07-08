@@ -959,53 +959,123 @@ body {
   }
 }
 
-/* ---------- トースト ---------- */
+/* ---------- 交換イベント（奪う／山札交換の演出） ---------- */
 
-.toast {
+.exevent {
   position: fixed;
-  top: 58px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(30, 37, 68, 0.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--line-gold);
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 0.84rem;
-  padding: 10px 20px;
-  border-radius: 999px;
-  z-index: 45;
-  white-space: nowrap;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
-  animation: toastIn 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 22vh;
   pointer-events: none;
+  animation: overlayIn 0.2s ease;
 }
-@keyframes toastIn {
-  0% {
-    transform: translate(-50%, -24px);
-    opacity: 0;
-  }
-  100% {
-    transform: translate(-50%, 0);
-    opacity: 1;
-  }
+.exevent__panel {
+  pointer-events: none;
+  background: linear-gradient(170deg, rgba(38, 46, 82, 0.96), rgba(14, 18, 34, 0.97));
+  border: 1px solid var(--line-gold);
+  border-radius: var(--radius);
+  padding: 18px 26px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-panel);
+  animation: sheetIn 0.32s cubic-bezier(0.2, 1.3, 0.4, 1) backwards;
+  min-width: 220px;
+  max-width: 320px;
+}
+.exevent__panel--alert {
+  border-color: var(--danger);
+  box-shadow:
+    var(--shadow-panel),
+    0 0 26px rgba(224, 96, 108, 0.28);
+}
+.exevent__icon {
+  font-size: 1.6rem;
+  margin-bottom: 2px;
+}
+.exevent__title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: var(--gold-hi);
+  text-transform: uppercase;
+}
+.exevent__headline {
+  margin: 2px 0 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.5;
+}
+.exevent__cardRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.exevent__cardRow--swap {
+  gap: 10px;
+}
+.exevent__arrow {
+  color: var(--gold);
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+.exevent__mystery {
+  margin: 8px 0 0;
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+}
+.exevent__hintBox {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(217, 168, 63, 0.14);
+  border: 1px solid var(--line-gold);
+  border-radius: 999px;
+  padding: 7px 16px;
+  animation: stampPop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
+  animation-delay: 0.5s;
+}
+.exevent__hintLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ink-dim);
+}
+.exevent__hintValue {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--gold-hi);
+}
+.exevent__penalty {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.exevent__penaltyLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--danger);
+  text-align: center;
+  line-height: 1.5;
 }
 
 /* ---------- 場札のめくり ---------- */
 
-.table__flopCard {
-  animation: flopFlip 0.5s cubic-bezier(0.3, 1.3, 0.4, 1) backwards;
-}
-@keyframes flopFlip {
-  0% {
-    transform: rotateY(90deg) scale(1.15);
-    opacity: 0.4;
-  }
-  100% {
-    transform: rotateY(0) scale(1);
-    opacity: 1;
-  }
+.table__flopSlot {
+  display: flex;
 }
 
 /* ---------- 配札時の登場 ---------- */

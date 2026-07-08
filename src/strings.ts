@@ -50,7 +50,6 @@ export const SEE_RESULT = '結果を見る';
 export const BADGE_STAY = '残る！';
 export const BADGE_FOLD = '降りる…';
 export const DECISION_REVEAL_BANNER = 'せーの！';
-export const TOAST_STOLEN_FROM_YOU = (name: string) => `⚠️ ${name}があなたのnot meを奪った！`;
 export const YOU_WIN_STAMP = 'WIN!';
 export const YOU_LOSE_STAMP = 'まけ…';
 export const DRAW_STAMP = '引き分け';
@@ -101,6 +100,17 @@ export const HELP_SCORE_ROWS: [string, string][] = [
 export const HELP_SOUND_SECTION = '設定';
 export const HELP_SOUND_LABEL = '効果音';
 export const HELP_CLOSE = '閉じる';
+
+// --- 交換フェーズの事件演出（ExchangeEvent） ---
+export const EVENT_STEAL_TITLE = '強奪！';
+export const EVENT_STEAL_FROM_YOU = (actor: string) => `${actor}が、あなたのnot meを奪った！`;
+export const EVENT_STEAL_LINE = (actor: string, target: string) => `${actor}が${target}のnot meを奪った！`;
+export const EVENT_HINT_GAINED = 'ヒント獲得';
+export const EVENT_PENALTY_LABEL = 'ペナルティ：手札の1枚が山札と交換された';
+export const EVENT_SWAP_TITLE = '山札交換';
+export const EVENT_SWAP_LINE = (actor: string) => `${actor}が山札とnot meを交換した`;
+export const EVENT_SWAP_LINE_YOU = 'あなたは山札とnot meを交換した（中身は見えないまま）';
+export const EVENT_MYSTERY_NOTE = '（自分のnot meはまだ見えない）';
 
 export const FOLD_LOG = (name: string) => `${name}が降りた`;
 export const EXCHANGE_PASS_LOG = (name: string) => `${name}は交換しなかった`;
