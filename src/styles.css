@@ -2276,6 +2276,95 @@ body::before {
   line-height: 1.8;
 }
 
+/* ---------- オンライン対戦（ルームコード） ---------- */
+
+.online {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 24px;
+  position: relative;
+}
+.online__back {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+}
+.online__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 3px 0 #b34d8a, 0 6px 16px rgba(255, 90, 158, 0.5);
+}
+.online__choices,
+.online__waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+.online__blurb {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+  line-height: 1.8;
+  font-weight: 600;
+}
+.online__error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #ffd0d5;
+  font-weight: 700;
+}
+.online__codeInput {
+  font-family: var(--font-display);
+  text-align: center;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  outline: none;
+}
+.online__codeInput::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+.online__code {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--gold-hi);
+  text-shadow: 0 0 20px rgba(255, 230, 162, 0.5);
+}
+.online__players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.online__playerRow {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-weight: 800;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
 @media (min-width: 540px) {
   .app {
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);

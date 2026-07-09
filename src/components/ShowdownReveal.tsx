@@ -18,6 +18,8 @@ interface ShowdownRevealProps {
   state: GameState;
   onContinue: () => void;
   isFinalHand: boolean;
+  /** オンライン対戦用：「あなた」として扱う席番号（省略時は isHuman で判定） */
+  heroId?: number;
 }
 
 // 演出の段階：
@@ -25,13 +27,17 @@ interface ShowdownRevealProps {
 // 3 not me がめくれる → 4 役と勝敗・得点が確定する → 5 続行ボタン
 type Step = 0 | 1 | 2 | 3 | 4 | 5;
 
-export function ShowdownReveal({ state, onContinue, isFinalHand }: ShowdownRevealProps) {
+export function ShowdownReveal({ state, onContinue, isFinalHand, heroId }: ShowdownRevealProps) {
   const [step, setStep] = useState<Step>(0);
   const result = state.lastResult;
-  const human = state.players.find((p) => p.isHuman)!;
+  const human =
+    heroId !== undefined ? state.players.find((p) => p.id === heroId)! : state.players.find((p) => p.isHuman)!;
   const humanActive = !human.folded;
   const humanWon = result?.winnerIds.includes(human.id) ?? false;
-  const opponents = state.players.filter((p) => !p.folded && !p.isHuman);
+  const opponents =
+    heroId !== undefined
+      ? state.players.filter((p) => !p.folded && p.id !== heroId)
+      : state.players.filter((p) => !p.folded && !p.isHuman);
 
   useEffect(() => {
     if (!result) return;

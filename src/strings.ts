@@ -44,6 +44,24 @@ export const ACCOUNT_BLURB =
   'メールアドレスを登録すると、機種変更やブラウザのデータ削除後も同じ進行状況（チップ・記録）を引き継げます。';
 export const ACCOUNT_EMAIL_LABEL = 'メールアドレス';
 export const ACCOUNT_PASSWORD_LABEL = 'パスワード（6文字以上）';
+// --- オンライン対戦（ルームコード） ---
+export const ONLINE_BUTTON = '🌐 オンライン対戦';
+export const ONLINE_TITLE = 'オンライン対戦';
+export const ONLINE_CREATE_ROOM = 'ルームを作る';
+export const ONLINE_JOIN_ROOM = 'ルームコードで参加';
+export const ONLINE_JOIN_BLURB = '相手から教えてもらった6文字のコードを入力してね。';
+export const ONLINE_CODE_PLACEHOLDER = 'ABCDEF';
+export const ONLINE_JOIN_SUBMIT = '参加する';
+export const ONLINE_SHARE_CODE = 'このコードを相手に伝えて参加してもらおう';
+export const ONLINE_YOU_TAG = '（あなた）';
+export const ONLINE_WAITING_FOR_PLAYERS = '参加を待っています…';
+export const ONLINE_WAITING_FOR_HOST = 'ホストの開始を待っています…';
+export const ONLINE_START = 'このメンバーで始める';
+export const ONLINE_LOADING = '読み込み中…';
+export const ONLINE_MATCH_OVER = '対戦終了！';
+export const ONLINE_ROOM_NOT_FOUND = 'そのコードのルームが見つかりません';
+export const ONLINE_ERROR_GENERIC = '通信エラーが発生しました。もう一度お試しください。';
+
 export const ACCOUNT_SUBMIT = '登録する';
 export const ACCOUNT_CLOSE = '閉じる';
 export const ACCOUNT_SUBMITTING = '送信中…';

@@ -102,7 +102,17 @@
 - **チップランキング**：`get_leaderboard(limit_count)` という SECURITY DEFINER 関数（`supabase/migrations/0002_leaderboard_and_games_played.sql`、`search_path=''` 固定＋`anon, authenticated` へ限定 grant）で `profiles` を `chip_balance` 降順に取得。`src/platform/ranking.ts` の `fetchLeaderboard()` が RPC を呼び、`RankingScreen.tsx` がホーム画面から開くモーダルとして表示（1位クラウン、ゲーム数・チップ残高を表示）。未設定・オフライン時は空配列を返し「表示できません」の文言にフォールバック
 - **プレイ数の記録**：`increment_games_played()`（`authenticated` のみ許可）を、ゲーム終了（キャッシュアウト）のたびに `src/platform/wallet.ts` の `recordGameCompleted()` から呼び出してアトミックに+1する。失敗してもゲーム進行には影響しないベストエフォート
 - **アカウント保存（匿名→本アカウント昇格）**：`upgradeAccount(email, password)` が `auth.updateUser({ email, password })` を呼び、同じユーザーID（＝同じプロフィール・チップ残高）を維持したまま匿名アカウントをメール+パスワードの本アカウントへ昇格する。`AccountModal.tsx` がホーム画面から開くフォームとして提供。オフライン・Supabase未設定時は明示的にエラーメッセージを表示
-- **次の段階（Phase 2c）**：サーバー権威のリアルタイム・オンライン対戦（Supabase Realtime ＋ Edge Functions）。今回のランキング／アカウント実装とは別スコープの大きめの取り組みとして今後着手する
+
+#### Phase 2c：オンライン対戦・ルームコード版（実装済み）
+サーバー権威の本体。エンジン（`src/engine/`）を一切変更せずそのまま Edge Function 側へ複製・再利用することで、「自分の not me だけ サーバーが隠す」を実現した。
+
+- **スキーマ**（`supabase/migrations/0003_online_rooms.sql`）：`online_rooms`（コード・モード・ステータス・ホスト）／`online_room_players`（席・表示名）／`online_room_states`（試合の jsonb 状態＋シリアライズ可能な RNG カウンタ）。3テーブルとも `anon`/`authenticated` への権限を完全に revoke（RLS も enable）し、**クライアントは Postgres に一切直接アクセスできない**。全ての読み書きは Edge Function（service role）経由のみ
+- **サーバー権威オーケストレーション**（`supabase/functions/_shared/orchestration.ts`）：`src/engine/game.ts` の純関数（`dealHand`/`applyBets`/`applyExchange`/`revealCommunity`/`resolveShowdown` 等）をそのまま呼び出す薄いラッパー。`GameState.rng` は関数なので jsonb に保存できないため、mulberry32 の内部カウンタだけを `rngState` として永続化し、呼び出しのたびに再構築する。ローカル vitest（`orchestration.test.ts`）で2人対戦の1ハンド全体・複数ハンド・不正手番の拒否・視点別の伏せ札秘匿を検証してから Edge Function へデプロイした
+- **単一エンドポイント** `online-room`（`action` で分岐）：`create`（ルームコード発行）／`join`（コード参加）／`start`（ホストのみ、2人以上でハンド開始）／`bet`／`exchange`／`continue`／`view`。呼び出し元の席は毎回サーバー側で JWT の `sub` から確定し、クライアントが申告する playerId は一切信用しない
+- **秘匿ルール**（`redactForSeat`）：本人の hole は見える・notMe はショーダウンまで隠す（自分の not me だけ見えない、が核）。他人は逆（hole は隠す、notMe は見える）。デッキの残り札は誰にも見せない。この関数の出力だけがクライアントに渡る
+- **クライアント**：`src/platform/online.ts`（Edge Function 呼び出しラッパー）、`OnlineLobby.tsx`（ルーム作成/コード参加/待機室）、`OnlineGame.tsx`（ポーリング＋既存の `Table`/`ActionBar`/`ShowdownReveal` を再利用）。`Table`/`ShowdownReveal` に `heroId` プロパティを追加し（省略時は従来の `isHuman` 判定にフォールバックするため vs AI モードは無変更）、「手前に表示する自分の席」をオンライン視点に切り替えられるようにした
+- **今回のスコープ外**（次の一手）：カードが飛ぶアニメーション（`CardFlight`）とせーの同時公開演出はオンラインモードでは簡略化し、即時反映のみ（poll ベースのため「直前の状態」を保持していないと成立しないため）。オンライン対戦は各試合独立のスタック（300チップ）で行い、ウォレットの実残高・ランキングには影響しない（対人の実チップ経済は将来の判断が必要な別スコープ）
+- **次の段階（Phase 2d）**：ランキングコードに加えて、コード不要の公開ランダムマッチング（`mode='queue'` のルームを検索/作成）
 - **Phase 3**：iOS / Android ネイティブ（ストア展開・プッシュ通知・IAP 本実装）。その後 Steam 展開を検討
 
 ## 5. 配信最適化ロードマップ

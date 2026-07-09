@@ -29,6 +29,8 @@ interface TableProps {
   flight?: FlightLegSpec[] | null;
   onFlightSettle?: () => void;
   heroToast?: string | null;
+  /** オンライン対戦用：手前に大きく表示する「あなた」の席番号を明示する（省略時は isHuman で判定） */
+  heroId?: number;
 }
 
 export function Table({
@@ -39,6 +41,7 @@ export function Table({
   flight,
   onFlightSettle,
   heroToast,
+  heroId,
 }: TableProps) {
   const notMeRefs = useRef(new Map<number, HTMLElement>());
   const centerAnchorRef = useRef<HTMLDivElement>(null);
@@ -74,8 +77,10 @@ export function Table({
           })
           .filter((l): l is FlightLeg => l !== null)
       : null;
-  const human = state.players.find((p) => p.isHuman)!;
-  const opponents = state.players.filter((p) => !p.isHuman);
+  const human =
+    heroId !== undefined ? state.players.find((p) => p.id === heroId)! : state.players.find((p) => p.isHuman)!;
+  const opponents =
+    heroId !== undefined ? state.players.filter((p) => p.id !== heroId) : state.players.filter((p) => !p.isHuman);
 
   const badgeFor = (id: number): BetChoice | undefined => {
     if (!decisionReveal || !(id in decisionReveal)) return undefined;

@@ -15,6 +15,7 @@ interface TitleProps {
   onChangeAvatar: (avatar: string) => void;
   onOpenRanking: () => void;
   onOpenAccount: () => void;
+  onOpenOnline: () => void;
 }
 
 export function Title({
@@ -30,6 +31,7 @@ export function Title({
   onChangeAvatar,
   onOpenRanking,
   onOpenAccount,
+  onOpenOnline,
 }: TitleProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(displayName);
@@ -135,6 +137,10 @@ export function Title({
         </div>
       )}
       <p className="title__buyIn">{S.BUY_IN_LABEL(buyInCost)}</p>
+
+      <button className="btn btn--secondary" onClick={onOpenOnline}>
+        {S.ONLINE_BUTTON}
+      </button>
 
       <div className="title__linkRow">
         <button className="btn btn--ghost" onClick={onOpenRanking}>

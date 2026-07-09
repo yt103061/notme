@@ -34,6 +34,8 @@ import { ResultScreen } from './components/ResultScreen';
 import { HelpModal } from './components/HelpModal';
 import { RankingScreen } from './components/RankingScreen';
 import { AccountModal } from './components/AccountModal';
+import { OnlineLobby } from './components/OnlineLobby';
+import { OnlineGame } from './components/OnlineGame';
 import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
 import {
@@ -54,7 +56,7 @@ import {
 } from './platform/wallet';
 import * as S from './strings';
 
-type Screen = 'title' | 'tutorial' | 'game' | 'result';
+type Screen = 'title' | 'tutorial' | 'game' | 'result' | 'onlineLobby' | 'onlineGame';
 
 const TUTORIAL_SEEN_KEY = 'notme_tutorial_seen';
 const AI_ORDER: PersonalityId[] = ['aggressive', 'steady', 'tricky'];
@@ -80,6 +82,7 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [rankingOpen, setRankingOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [onlineRoom, setOnlineRoom] = useState<{ roomId: string; seat: number } | null>(null);
   const [showVS, setShowVS] = useState(false);
   const [chipBalance, setChipBalance] = useState(() => getBalance());
   const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
@@ -565,9 +568,32 @@ export default function App() {
             onChangeAvatar={handleChangeAvatar}
             onOpenRanking={() => setRankingOpen(true)}
             onOpenAccount={() => setAccountOpen(true)}
+            onOpenOnline={() => setScreen('onlineLobby')}
           />
         )}
         {screen === 'tutorial' && <Tutorial onFinish={handleTutorialFinish} />}
+
+        {screen === 'onlineLobby' && (
+          <OnlineLobby
+            displayName={displayName}
+            onBack={() => setScreen('title')}
+            onEnterGame={(roomId, seat) => {
+              setOnlineRoom({ roomId, seat });
+              setScreen('onlineGame');
+            }}
+          />
+        )}
+
+        {screen === 'onlineGame' && onlineRoom && (
+          <OnlineGame
+            roomId={onlineRoom.roomId}
+            seat={onlineRoom.seat}
+            onExit={() => {
+              setOnlineRoom(null);
+              setScreen('title');
+            }}
+          />
+        )}
 
         {screen === 'game' && state && (
           <>
