@@ -133,24 +133,10 @@ export const HELP_SOUND_SECTION = '設定';
 export const HELP_SOUND_LABEL = '効果音';
 export const HELP_CLOSE = '閉じる';
 
-// --- 交換フェーズの事件演出（ExchangeEvent） ---
-// 通常時：一方的な略奪（デフォルト仕様）
-export const EVENT_STEAL_TITLE = '強奪！';
-export const EVENT_STEAL_FROM_YOU = (actor: string) => `${actor}が、あなたのnot meを奪った！`;
-export const EVENT_STEAL_LINE = (actor: string, target: string) => `${actor}が${target}のnot meを奪った！`;
+// --- 交換フェーズの一時トースト（カードフライト演出に添える補足情報） ---
 export const EVENT_HINT_GAINED = 'ヒント獲得';
-export const EVENT_PENALTY_LABEL = 'ペナルティ：手札の1枚が山札と交換された';
-export const EVENT_MYSTERY_NOTE = '（自分のnot meはまだ見えない）';
-// 特殊時：お互い奪い合い（A→B の後の B→A）は相殺してただの交換になる
-export const EVENT_RECIPROCAL_TITLE = 'おたがい様！';
-export const EVENT_RECIPROCAL_FROM_YOU = (actor: string) => `${actor}と、not meが入れ替わった！`;
-export const EVENT_RECIPROCAL_LINE_YOU = (target: string) => `${target}と、not meが入れ替わった！`;
-export const EVENT_RECIPROCAL_LINE = (actor: string, target: string) =>
-  `${actor}と${target}のnot meが入れ替わった（お互い様）`;
-export const EVENT_YOUR_OLD_CARD = 'あなたの元のnot me、正体は…';
-export const EVENT_SWAP_TITLE = '山札交換';
-export const EVENT_SWAP_LINE = (actor: string) => `${actor}が山札とnot meを交換した`;
-export const EVENT_SWAP_LINE_YOU = 'あなたは山札とnot meを交換した（中身は見えないまま）';
+export const EVENT_PENALTY_LABEL = '手札1枚が山札と交換された';
+export const REVEAL_WAITING = '結果を確認中…';
 
 export const FOLD_LOG = (name: string) => `${name}が降りた`;
 export const EXCHANGE_PASS_LOG = (name: string) => `${name}は交換しなかった`;

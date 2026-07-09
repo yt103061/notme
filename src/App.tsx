@@ -27,12 +27,11 @@ import {
 import { Title } from './components/Title';
 import { Tutorial } from './components/Tutorial';
 import { VSIntro } from './components/VSIntro';
-import { Table } from './components/Table';
+import { Table, type FlightLegSpec } from './components/Table';
 import { ActionBar } from './components/ActionBar';
 import { ShowdownReveal } from './components/ShowdownReveal';
 import { ResultScreen } from './components/ResultScreen';
 import { HelpModal } from './components/HelpModal';
-import { ExchangeEvent, type ExchangeEventData } from './components/ExchangeEvent';
 import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
 import {
@@ -70,7 +69,8 @@ export default function App() {
   const [exchangeQueue, setExchangeQueue] = useState<number[]>([]);
   const [decisionReveal, setDecisionReveal] = useState<Record<number, BetChoice> | null>(null);
   const [showdownOpen, setShowdownOpen] = useState(false);
-  const [exchangeEvent, setExchangeEvent] = useState<ExchangeEventData | null>(null);
+  const [flight, setFlight] = useState<{ legs: FlightLegSpec[]; nextState: GameState } | null>(null);
+  const [heroToast, setHeroToast] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [showVS, setShowVS] = useState(false);
@@ -106,11 +106,11 @@ export default function App() {
     setDailyBonus(getDailyBonusStatus());
   }
 
-  /**
-   * 奪う＝対称的な notMe 交換。prev（適用前）と next（適用後）を見比べて演出データを組み立てる。
-   * 自分が当事者（actor/target）なら、自分が手放した「元のnot me」は相手のものになった瞬間に
-   * 見える情報になるので、そのカードを開示する。新しく受け取った札は引き続き自分からは見えない。
-   */
+  /** そのプレイヤーの notMe が「表向きに見える」か「本人には見えない」かは、その人が人間かどうかだけで決まる */
+  function appearanceForSeat(isHuman: boolean): 'faceUp' | 'hiddenSelf' {
+    return isHuman ? 'hiddenSelf' : 'faceUp';
+  }
+
   /** 奪った側の手札ペナルティで実際にどちらの1枚が入れ替わったかを前後比較で特定する（一方的な略奪の時のみ発生） */
   function findHolePenalty(prev: GameState, next: GameState, actorId: number) {
     const before = prev.players.find((p) => p.id === actorId)!.hole;
@@ -125,63 +125,112 @@ export default function App() {
 
   /**
    * 奪う：prev（適用前）を見て、target が既に actor から奪われていた（＝お互い奪い合いの
-   * 特殊ケース）かどうかを判定し、演出データを組み立てる。
-   * - お互い奪い合いの場合：単純な notMe 交換として演出する（山札もペナルティも関与しない）
-   * - 通常時：actor が target の notMe を一方的に奪う。奪われた側にはヒント、奪った側には
-   *   手札ペナルティを明示する
+   * 特殊ケース）かどうかを判定し、「カードが実際に飛ぶ」演出のための座席間フライトを組み立てる。
+   * - お互い奪い合いの場合：actor↔target 間で同時に2本、交差して飛ぶ
+   * - 通常時：target 座席から actor 座席へ1本。奪われた側にヒント、奪った側に手札ペナルティの
+   *   トーストを添える（人間が当事者の時だけ）
    */
-  function buildStealEvent(prev: GameState, next: GameState, actorId: number, targetId: number): ExchangeEventData {
+  function buildStealFlight(
+    prev: GameState,
+    next: GameState,
+    actorId: number,
+    targetId: number,
+  ): { legs: FlightLegSpec[]; toast: string | null } {
     const actorBefore = prev.players.find((p) => p.id === actorId)!;
     const targetBefore = prev.players.find((p) => p.id === targetId)!;
-    const actorAfter = next.players.find((p) => p.id === actorId)!;
-    const targetAfter = next.players.find((p) => p.id === targetId)!;
 
     if (actorBefore.stolenBy === targetId) {
-      // お互い奪い合いの特殊ケース
-      const perspective: 'actor' | 'target' | 'spectator' = actorBefore.isHuman
-        ? 'actor'
-        : targetBefore.isHuman
-          ? 'target'
-          : 'spectator';
       return {
-        type: 'steal',
-        mode: 'reciprocalSwap',
-        actorName: actorBefore.name,
-        targetName: targetBefore.name,
-        perspective,
-        yourOldCard:
-          perspective === 'actor' ? targetAfter.notMe : perspective === 'target' ? actorAfter.notMe : null,
-        spectatorCards:
-          perspective === 'spectator'
-            ? { actorOldCard: actorBefore.notMe, targetOldCard: targetBefore.notMe }
-            : null,
+        legs: [
+          {
+            id: 'recip-a',
+            card: actorBefore.notMe,
+            fromSeat: actorId,
+            toSeat: targetId,
+            startAppearance: appearanceForSeat(actorBefore.isHuman),
+            endAppearance: appearanceForSeat(targetBefore.isHuman),
+          },
+          {
+            id: 'recip-b',
+            card: targetBefore.notMe,
+            fromSeat: targetId,
+            toSeat: actorId,
+            startAppearance: appearanceForSeat(targetBefore.isHuman),
+            endAppearance: appearanceForSeat(actorBefore.isHuman),
+          },
+        ],
+        toast: null,
       };
     }
 
+    const targetAfter = next.players.find((p) => p.id === targetId)!;
+    let toast: string | null = null;
+    if (targetBefore.isHuman && targetAfter.hint) {
+      toast = `${S.EVENT_HINT_GAINED}：${targetAfter.hint.label}`;
+    }
+    if (actorBefore.isHuman && findHolePenalty(prev, next, actorId)) {
+      toast = S.EVENT_PENALTY_LABEL;
+    }
+
     return {
-      type: 'steal',
-      mode: 'oneSided',
-      actorName: actorBefore.name,
-      targetName: targetBefore.name,
-      actorIsHuman: actorBefore.isHuman,
-      targetIsHuman: targetBefore.isHuman,
-      revealedCard: actorBefore.isHuman ? null : targetBefore.notMe,
-      hint: targetAfter.hint,
-      holePenalty: actorBefore.isHuman ? findHolePenalty(prev, next, actorId) : null,
+      legs: [
+        {
+          id: 'steal',
+          card: targetBefore.notMe,
+          fromSeat: targetId,
+          toSeat: actorId,
+          startAppearance: appearanceForSeat(targetBefore.isHuman),
+          endAppearance: appearanceForSeat(actorBefore.isHuman),
+        },
+      ],
+      toast,
     };
   }
 
-  /** 山札交換: actor が人間なら前後とも非公開（本人には常に見えないため） */
-  function buildDeckSwapEvent(prev: GameState, next: GameState, actorId: number): ExchangeEventData {
+  /** 山札交換：座席↔卓中央へ2本（旧カードが中央へ、新カードが座席へ、少し遅れて） */
+  function buildDeckSwapFlight(
+    prev: GameState,
+    next: GameState,
+    actorId: number,
+  ): { legs: FlightLegSpec[]; toast: string | null } {
     const before = prev.players.find((p) => p.id === actorId)!;
     const after = next.players.find((p) => p.id === actorId)!;
+    const appearance = appearanceForSeat(before.isHuman);
     return {
-      type: 'deckSwap',
-      actorName: before.name,
-      actorIsHuman: before.isHuman,
-      revealedBefore: before.isHuman ? null : before.notMe,
-      revealedAfter: before.isHuman ? null : after.notMe,
+      legs: [
+        {
+          id: 'deck-out',
+          card: before.notMe,
+          fromSeat: actorId,
+          toSeat: 'center',
+          startAppearance: appearance,
+          endAppearance: appearance,
+        },
+        {
+          id: 'deck-in',
+          card: after.notMe,
+          fromSeat: 'center',
+          toSeat: actorId,
+          startAppearance: appearance,
+          endAppearance: appearance,
+          delayMs: 260,
+        },
+      ],
+      toast: null,
     };
+  }
+
+  function showHeroToast(text: string) {
+    setHeroToast(text);
+    window.setTimeout(() => setHeroToast((t) => (t === text ? null : t)), 2200);
+  }
+
+  /** カードフライトが着地した瞬間に、保留していた状態遷移をまとめてコミットする */
+  function handleFlightSettle() {
+    if (!flight) return;
+    setState(flight.nextState);
+    setFlight(null);
+    setExchangeQueue((q) => q.slice(1));
   }
 
   /** そのラウンドの AI 全員の賭け判断と勝率をまとめて計算 */
@@ -331,8 +380,8 @@ export default function App() {
 
   useEffect(() => {
     if (!state || state.phase !== 'exchange') return;
-    // イベントバナー表示中は次のアクションを開始しない（バナーを読む時間を確保する）
-    if (exchangeEvent) return;
+    // カードフライト中は次のアクションを開始しない（着地まで足止めする）
+    if (flight) return;
 
     if (exchangeQueue.length === 0) {
       const timer = window.setTimeout(() => {
@@ -370,19 +419,23 @@ export default function App() {
       if (action.type === 'steal') {
         sfx.play('exchange');
         setEmotes((e) => ({ ...e, [currentId]: pickStealLine(rng) }));
-        setExchangeEvent(buildStealEvent(state, next, currentId, action.targetId));
+        const { legs, toast } = buildStealFlight(state, next, currentId, action.targetId);
+        setFlight({ legs, nextState: next });
+        if (toast) showHeroToast(toast);
       } else if (action.type === 'drawDeck') {
         sfx.play('exchange');
-        setExchangeEvent(buildDeckSwapEvent(state, next, currentId));
+        const { legs, toast } = buildDeckSwapFlight(state, next, currentId);
+        setFlight({ legs, nextState: next });
+        if (toast) showHeroToast(toast);
+      } else {
+        // pass：フライトが発生しないので即座にコミットして次の手番へ
+        setState(next);
+        setExchangeQueue((q) => q.slice(1));
       }
-
-      // 進行自体は即座に。次のプレイヤーの手番はバナーが消えるまで上の早期returnで足止めされる
-      setState(next);
-      setExchangeQueue((q) => q.slice(1));
     }, 950);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, exchangeQueue, exchangeEvent]);
+  }, [state, exchangeQueue, flight]);
 
   function appendExchangeLog(current: GameState, actorId: number, action: ExchangeAction) {
     const actor = current.players.find((p) => p.id === actorId)!;
@@ -412,13 +465,17 @@ export default function App() {
     const next = applyExchange(state, 0, action);
 
     if (action.type === 'steal') {
-      setExchangeEvent(buildStealEvent(state, next, 0, action.targetId));
+      const { legs, toast } = buildStealFlight(state, next, 0, action.targetId);
+      setFlight({ legs, nextState: next });
+      if (toast) showHeroToast(toast);
     } else if (action.type === 'drawDeck') {
-      setExchangeEvent(buildDeckSwapEvent(state, next, 0));
+      const { legs, toast } = buildDeckSwapFlight(state, next, 0);
+      setFlight({ legs, nextState: next });
+      if (toast) showHeroToast(toast);
+    } else {
+      setState(next);
+      setExchangeQueue((q) => q.slice(1));
     }
-
-    setState(next);
-    setExchangeQueue((q) => q.slice(1));
   }
 
   function handlePlayAgain() {
@@ -434,9 +491,9 @@ export default function App() {
 
   function renderActionArea() {
     if (!state || showdownOpen) return null;
-    if (decisionReveal) return <ActionBar mode="waiting" message={S.DECISION_REVEAL_BANNER} />;
-    // 事件バナー表示中は同じ手番のアクションを再度受け付けない
-    if (exchangeEvent) return <ActionBar mode="waiting" />;
+    if (decisionReveal) return <ActionBar mode="waiting" message={S.REVEAL_WAITING} />;
+    // カードフライト中は同じ手番のアクションを再度受け付けない
+    if (flight) return <ActionBar mode="waiting" />;
 
     if ((state.phase === 'decision1' || state.phase === 'decision2') && aiBets) {
       const human = state.players.find((p) => p.isHuman)!;
@@ -502,6 +559,9 @@ export default function App() {
               emotes={emotes}
               actingPlayerId={state.phase === 'exchange' ? exchangeQueue[0] : undefined}
               decisionReveal={decisionReveal}
+              flight={flight?.legs ?? null}
+              onFlightSettle={handleFlightSettle}
+              heroToast={heroToast}
             />
             {renderActionArea()}
             <div className="app__log">
@@ -512,9 +572,6 @@ export default function App() {
               ))}
             </div>
             {decisionReveal && <div className="revealBanner">{S.DECISION_REVEAL_BANNER}</div>}
-            {exchangeEvent && (
-              <ExchangeEvent event={exchangeEvent} onDismiss={() => setExchangeEvent(null)} />
-            )}
             {showdownOpen && (
               <ShowdownReveal
                 state={state}

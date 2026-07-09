@@ -1,11 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { Card } from '../engine/cards';
 import { betLabel, type BetChoice, type GameState, type PlayerState } from '../engine/game';
 import { CardView } from './CardView';
 import { FlipCard } from './FlipCard';
 import { PlayerSeat } from './PlayerSeat';
+import { CardFlight, type FlightLeg } from './CardFlight';
 import { sfx } from '../audio/sfx';
 import { HAND_LABEL, SUDDEN_DEATH_BADGE } from '../strings';
 import * as S from '../strings';
+
+/** notMe の交換演出（カードが飛ぶ）の1本分。座席IDまたは卓中央('center')で指定する */
+export interface FlightLegSpec {
+  id: string;
+  card: Card;
+  fromSeat: number | 'center';
+  toSeat: number | 'center';
+  startAppearance: 'faceUp' | 'hiddenSelf';
+  endAppearance: 'faceUp' | 'hiddenSelf';
+  delayMs?: number;
+}
 
 interface TableProps {
   state: GameState;
@@ -13,9 +26,54 @@ interface TableProps {
   actingPlayerId?: number;
   /** せーの同時公開中：playerId -> その人の賭け選択 */
   decisionReveal?: Record<number, BetChoice> | null;
+  flight?: FlightLegSpec[] | null;
+  onFlightSettle?: () => void;
+  heroToast?: string | null;
 }
 
-export function Table({ state, emotes, actingPlayerId, decisionReveal }: TableProps) {
+export function Table({
+  state,
+  emotes,
+  actingPlayerId,
+  decisionReveal,
+  flight,
+  onFlightSettle,
+  heroToast,
+}: TableProps) {
+  const notMeRefs = useRef(new Map<number, HTMLElement>());
+  const centerAnchorRef = useRef<HTMLDivElement>(null);
+
+  function registerNotMeRef(id: number) {
+    return (el: HTMLElement | null) => {
+      if (el) notMeRefs.current.set(id, el);
+      else notMeRefs.current.delete(id);
+    };
+  }
+
+  function rectFor(seat: number | 'center'): DOMRect | null {
+    if (seat === 'center') return centerAnchorRef.current?.getBoundingClientRect() ?? null;
+    return notMeRefs.current.get(seat)?.getBoundingClientRect() ?? null;
+  }
+
+  const flightLegs: FlightLeg[] | null =
+    flight && flight.length > 0
+      ? flight
+          .map((spec): FlightLeg | null => {
+            const fromRect = rectFor(spec.fromSeat);
+            const toRect = rectFor(spec.toSeat);
+            if (!fromRect || !toRect) return null;
+            return {
+              id: spec.id,
+              card: spec.card,
+              fromRect,
+              toRect,
+              startAppearance: spec.startAppearance,
+              endAppearance: spec.endAppearance,
+              delayMs: spec.delayMs,
+            };
+          })
+          .filter((l): l is FlightLeg => l !== null)
+      : null;
   const human = state.players.find((p) => p.isHuman)!;
   const opponents = state.players.filter((p) => !p.isHuman);
 
@@ -65,12 +123,13 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
             isActingNow={actingPlayerId === p.id}
             decisionBadge={badgeFor(p.id)}
             badgeDelaySec={badgeDelay(p.id)}
+            notMeRef={registerNotMeRef(p.id)}
           />
         ))}
       </div>
 
       {/* 卓の中心のスポットライト：ポット＋共有の場札 */}
-      <div className="arena__center">
+      <div className="arena__center" ref={centerAnchorRef}>
         <div className="arena__pot">
           <span className="arena__potLabel">{S.POT_LABEL}</span>
           <span className="arena__potValue">
@@ -97,7 +156,7 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
           .filter(Boolean)
           .join(' ')}
       >
-        <HeroInfo player={human} />
+        <HeroInfo player={human} toast={heroToast} />
         <div className="arena__heroCards">
           <div className="arena__heroCard arena__heroCard--l">
             <CardView card={human.hole[0]} variant="faceUp" size="xl" />
@@ -105,13 +164,15 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
           <div className="arena__heroCard arena__heroCard--r">
             <CardView card={human.hole[1]} variant="faceUp" size="xl" />
           </div>
-          <div className="arena__heroCard arena__heroCard--notme">
+          <div className="arena__heroCard arena__heroCard--notme" ref={registerNotMeRef(human.id)}>
             <CardView card={human.notMe} variant="hiddenSelf" size="xl" />
             <span className="arena__notmeTag">not me</span>
           </div>
         </div>
 
-        {emotes[human.id] && !human.folded && (
+        {flightLegs && <CardFlight legs={flightLegs} onSettle={onFlightSettle ?? (() => {})} />}
+
+        {!humanBadge && emotes[human.id] && !human.folded && (
           <div key={emotes[human.id]} className="arena__heroEmote">
             {emotes[human.id]}
           </div>
@@ -131,7 +192,7 @@ export function Table({ state, emotes, actingPlayerId, decisionReveal }: TablePr
 }
 
 /** あなたの名前・スタック・ヒントを表す浮遊チップ列 */
-function HeroInfo({ player }: { player: PlayerState }) {
+function HeroInfo({ player, toast }: { player: PlayerState; toast?: string | null }) {
   return (
     <div className="arena__heroInfo">
       <span className="arena__heroName">
@@ -144,6 +205,11 @@ function HeroInfo({ player }: { player: PlayerState }) {
         {S.CHIP_ICON} {player.stack}
       </span>
       {player.hint && <span className="arena__heroHint">ヒント：{player.hint.label}</span>}
+      {toast && (
+        <span key={toast} className="arena__heroToast">
+          {toast}
+        </span>
+      )}
     </div>
   );
 }
