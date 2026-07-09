@@ -1,0 +1,200 @@
+.card-slot {
+  position: relative;
+  width: var(--card-w, 96px);
+  height: calc(var(--card-w, 96px) * 1.4);
+  perspective: 1000px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card-slot--sm { --card-w: 64px; }
+.card-slot--md { --card-w: 96px; }
+.card-slot--lg { --card-w: 168px; }
+
+.card-slot--disabled .card-face--front {
+  filter: saturate(0.55) brightness(0.82);
+}
+
+.card-shadow {
+  position: absolute;
+  inset: 6% 4%;
+  border-radius: 10%;
+  background: #000;
+  opacity: 0.25;
+  pointer-events: none;
+  will-change: transform, filter, opacity;
+}
+
+.card-body {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  cursor: grab;
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 8%;
+  backface-visibility: hidden;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.card-face--back {
+  background: radial-gradient(circle at 30% 20%, #3a3f57, #1a1c2b 70%);
+  transform: rotateY(180deg);
+}
+
+.card-back-pattern {
+  position: absolute;
+  inset: 10%;
+  border-radius: 6%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 6px, transparent 6px 12px);
+}
+
+.card-face--front {
+  background: linear-gradient(160deg, hsl(var(--hue) 55% 30%), hsl(var(--hue) 60% 14%) 75%);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-artwork {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--card-w, 96px) * 0.42);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+}
+
+.card-glare {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.card-holo {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  background: repeating-linear-gradient(
+    115deg,
+    #ff5ecb 0%,
+    #ffd45e 15%,
+    #7dff9c 30%,
+    #5ec6ff 45%,
+    #c05eff 60%,
+    #ff5ecb 75%
+  );
+}
+
+.card-holo--rare {
+  /* rarity===rare のみ描画対象(通常カードはholoRefが常にopacity 0のまま) */
+}
+
+.card-frame {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 3% 6% 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+  color: #fff;
+  font-size: calc(var(--card-w, 96px) * 0.1);
+  line-height: 1.1;
+}
+
+.card-cost {
+  position: absolute;
+  top: -88%;
+  left: 4%;
+  width: 20%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe37a, #b98900);
+  color: #3a2600;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.card-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
+}
+
+.card-stats {
+  display: flex;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.card-atk { color: #ffb454; }
+.card-hp { color: #ff8080; }
+
+.card-state-ring {
+  position: absolute;
+  inset: -4%;
+  border-radius: 10%;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+}
+
+.card-state-ring--playable {
+  animation: card-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes card-breathe {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 240, 200, 0.25); }
+  50% { box-shadow: 0 0 14px 3px rgba(255, 240, 200, 0.55); }
+}
+
+.card-pulse {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 8%;
+}
+
+.card-pulse--active[data-kind="damage"] {
+  animation: card-pulse-damage 0.35s ease-out;
+}
+.card-pulse--active[data-kind="buff"] {
+  animation: card-pulse-buff 0.5s ease-out;
+}
+.card-pulse--active[data-kind="destroy"] {
+  animation: card-pulse-damage 0.5s ease-out;
+}
+.card-pulse--active[data-kind="rare-reveal"] {
+  animation: card-pulse-buff 0.9s ease-out;
+}
+
+@keyframes card-pulse-damage {
+  0% { opacity: 0.85; background: radial-gradient(circle, rgba(255, 70, 70, 0.9), transparent 70%); }
+  100% { opacity: 0; }
+}
+@keyframes card-pulse-buff {
+  0% { opacity: 0.85; background: radial-gradient(circle, rgba(255, 230, 130, 0.9), transparent 70%); }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-state-ring--playable { animation-duration: 4.5s; }
+}

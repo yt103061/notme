@@ -1,0 +1,56 @@
+.settings-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.settings-panel__sheet {
+  width: 320px;
+  max-width: 90vw;
+  background: #1a1c26;
+  border-radius: 16px;
+  padding: 22px 24px;
+  color: #e8e8ef;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.settings-panel__sheet h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.settings-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-panel__row input {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-panel__close {
+  margin-top: 18px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8e8ef;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.settings-panel__close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
