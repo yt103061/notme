@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Card } from '../engine/cards';
 import { betLabel, type BetChoice, type GameState, type PlayerState } from '../engine/game';
-import { CardView } from './CardView';
+import { CardView, type CardVariant } from './CardView';
 import { FlipCard } from './FlipCard';
 import { PlayerSeat } from './PlayerSeat';
 import { CardFlight, type FlightLeg } from './CardFlight';
-import { sfx } from '../audio/sfx';
+import { CardDetailOverlay } from './CardDetailOverlay';
 import { HAND_LABEL, SUDDEN_DEATH_BADGE } from '../strings';
 import * as S from '../strings';
 
@@ -45,6 +45,7 @@ export function Table({
 }: TableProps) {
   const notMeRefs = useRef(new Map<number, HTMLElement>());
   const centerAnchorRef = useRef<HTMLDivElement>(null);
+  const [detail, setDetail] = useState<{ card?: Card; variant: CardVariant; rect: DOMRect } | null>(null);
 
   function registerNotMeRef(id: number) {
     return (el: HTMLElement | null) => {
@@ -90,13 +91,11 @@ export function Table({
   const badgeDelay = (id: number) => 0.25 + revealIds.indexOf(id) * 0.22;
 
   // 場札は「配られてすぐ」ではなく「一拍おいてめくれる」演出にする（表示アクションを明示するため）
+  // めくり音自体はFlipCardが90度通過の瞬間に鳴らすため、ここではタイミングの制御のみ行う
   const [revealedCount, setRevealedCount] = useState(0);
   useEffect(() => {
     if (state.community.length > revealedCount) {
-      const t = window.setTimeout(() => {
-        setRevealedCount(state.community.length);
-        sfx.play('flip');
-      }, 320);
+      const t = window.setTimeout(() => setRevealedCount(state.community.length), 320);
       return () => window.clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,13 +163,31 @@ export function Table({
         <HeroInfo player={human} toast={heroToast} />
         <div className="arena__heroCards">
           <div className="arena__heroCard arena__heroCard--l">
-            <CardView card={human.hole[0]} variant="faceUp" size="xl" />
+            <CardView
+              card={human.hole[0]}
+              variant="faceUp"
+              size="xl"
+              interactive
+              onTap={(rect) => setDetail({ card: human.hole[0], variant: 'faceUp', rect })}
+            />
           </div>
           <div className="arena__heroCard arena__heroCard--r">
-            <CardView card={human.hole[1]} variant="faceUp" size="xl" />
+            <CardView
+              card={human.hole[1]}
+              variant="faceUp"
+              size="xl"
+              interactive
+              onTap={(rect) => setDetail({ card: human.hole[1], variant: 'faceUp', rect })}
+            />
           </div>
           <div className="arena__heroCard arena__heroCard--notme" ref={registerNotMeRef(human.id)}>
-            <CardView card={human.notMe} variant="hiddenSelf" size="xl" />
+            <CardView
+              card={human.notMe}
+              variant="hiddenSelf"
+              size="xl"
+              interactive
+              onTap={(rect) => setDetail({ card: human.notMe, variant: 'hiddenSelf', rect })}
+            />
             <span className="arena__notmeTag">not me</span>
           </div>
         </div>
@@ -192,6 +209,15 @@ export function Table({
         )}
         {human.folded && <div className="arena__heroFolded">降り</div>}
       </div>
+
+      {detail && (
+        <CardDetailOverlay
+          card={detail.card}
+          variant={detail.variant}
+          originRect={detail.rect}
+          onClose={() => setDetail(null)}
+        />
+      )}
     </div>
   );
 }

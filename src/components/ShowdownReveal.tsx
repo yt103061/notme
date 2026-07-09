@@ -44,40 +44,29 @@ export function ShowdownReveal({ state, onContinue, isFinalHand, heroId }: Showd
     const timers: number[] = [];
     const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
 
+    // カードのめくり音はFlipCardが90度通過の瞬間に自ら鳴らすため、ここではタイミングのみ制御する
     if (result.reason === 'walkover') {
-      at(400, () => {
-        setStep(3);
-        sfx.play('flip');
-      });
+      at(400, () => setStep(3));
       at(1400, () => {
         setStep(4);
         sfx.play(humanWon ? 'win' : 'fold');
       });
       at(2000, () => setStep(5));
     } else {
-      at(450, () => {
-        setStep(1);
-        sfx.play('flip');
-      });
+      at(450, () => setStep(1));
       if (humanActive) {
         at(1700, () => {
           setStep(2);
           sfx.play('suspense');
         });
-        at(3100, () => {
-          setStep(3);
-          sfx.play('flip');
-        });
+        at(3100, () => setStep(3));
         at(3900, () => {
           setStep(4);
           sfx.play(humanWon ? 'win' : 'lose');
         });
         at(4600, () => setStep(5));
       } else {
-        at(1900, () => {
-          setStep(3);
-          sfx.play('flip');
-        });
+        at(1900, () => setStep(3));
         at(2600, () => {
           setStep(4);
           sfx.play('fold');

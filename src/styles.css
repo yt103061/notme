@@ -1309,6 +1309,83 @@ body::before {
   }
 }
 
+/* ---------- 物理エンジン駆動のカード(plan.md 1〜3章)：触れると持ち上がり・傾き・光る ---------- */
+
+.card-physics {
+  position: relative;
+  display: inline-block;
+  perspective: 700px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.card-physics .card {
+  cursor: grab;
+  will-change: transform;
+}
+.card-physics__shadow {
+  position: absolute;
+  inset: 6% 4%;
+  border-radius: var(--radius-xs);
+  background: #000;
+  opacity: 0.28;
+  pointer-events: none;
+  will-change: transform, filter, opacity;
+}
+.card-physics__glare {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* ---------- カード詳細ビュー(plan.md 3.7)：タップしたカードを拡大して自由に傾けられる ---------- */
+
+.card-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.card-detail-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 4, 16, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: cardDetailFade 0.22s ease-out;
+}
+@keyframes cardDetailFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.card-detail-overlay__stage {
+  position: relative;
+  z-index: 1;
+  cursor: grab;
+  touch-action: none;
+}
+.card-detail-overlay__stage .card-physics {
+  transform: scale(2.3);
+}
+.card-detail-overlay__hint {
+  position: absolute;
+  bottom: 34px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  pointer-events: none;
+}
+
 /* ---------- FlipCard ---------- */
 
 .flip {
@@ -1332,10 +1409,7 @@ body::before {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.55s cubic-bezier(0.3, 1.3, 0.4, 1);
-}
-.flip__inner--revealed {
-  transform: rotateY(180deg);
+  will-change: transform;
 }
 .flip__face {
   position: absolute;
