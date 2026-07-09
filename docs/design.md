@@ -96,8 +96,13 @@
 - **ウォレットのサーバー同期**：`src/platform/wallet.ts` は「常に localStorage をローカルキャッシュに使い、Supabase 有効時は起動時にサーバーからハイドレート＋変更をバックグラウンド同期」する設計。読み取りは同期のままなので UI 実装は不変。`supabase-js` は動的 import で遅延ロードし、初期バンドルを軽く保つ
 - **フォールバック**：環境変数（`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`）未設定、または認証失敗時は localStorage のみで完全に動作する（バックエンド障害でもゲームは止まらない）
 - **ホーム画面のプロフィール**：表示名（編集可能）とチップ残高を表示。表示名はサーバーへ同期
-- **残る有効化手順**：匿名サインインは Supabase 側で既定オフのため、ダッシュボードの Authentication → Sign In / Providers → **Anonymous を有効化**する1操作だけが必要（有効化した瞬間、再デプロイなしでクラウド同期が始まる）
-- **次の段階（Phase 2b/2c）**：チップ獲得数ランキング（`profiles` を集計するビュー／`game_results` テーブル）→ サーバー権威のリアルタイム・オンライン対戦（Supabase Realtime ＋ Edge Functions）
+- **匿名サインインは有効化済み**：ダッシュボードの Authentication → Sign In / Providers → Anonymous を有効化し、クラウド同期が稼働中
+
+#### Phase 2b：ランキング／アカウント保存（実装済み）
+- **チップランキング**：`get_leaderboard(limit_count)` という SECURITY DEFINER 関数（`supabase/migrations/0002_leaderboard_and_games_played.sql`、`search_path=''` 固定＋`anon, authenticated` へ限定 grant）で `profiles` を `chip_balance` 降順に取得。`src/platform/ranking.ts` の `fetchLeaderboard()` が RPC を呼び、`RankingScreen.tsx` がホーム画面から開くモーダルとして表示（1位クラウン、ゲーム数・チップ残高を表示）。未設定・オフライン時は空配列を返し「表示できません」の文言にフォールバック
+- **プレイ数の記録**：`increment_games_played()`（`authenticated` のみ許可）を、ゲーム終了（キャッシュアウト）のたびに `src/platform/wallet.ts` の `recordGameCompleted()` から呼び出してアトミックに+1する。失敗してもゲーム進行には影響しないベストエフォート
+- **アカウント保存（匿名→本アカウント昇格）**：`upgradeAccount(email, password)` が `auth.updateUser({ email, password })` を呼び、同じユーザーID（＝同じプロフィール・チップ残高）を維持したまま匿名アカウントをメール+パスワードの本アカウントへ昇格する。`AccountModal.tsx` がホーム画面から開くフォームとして提供。オフライン・Supabase未設定時は明示的にエラーメッセージを表示
+- **次の段階（Phase 2c）**：サーバー権威のリアルタイム・オンライン対戦（Supabase Realtime ＋ Edge Functions）。今回のランキング／アカウント実装とは別スコープの大きめの取り組みとして今後着手する
 - **Phase 3**：iOS / Android ネイティブ（ストア展開・プッシュ通知・IAP 本実装）。その後 Steam 展開を検討
 
 ## 5. 配信最適化ロードマップ

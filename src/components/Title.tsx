@@ -11,6 +11,8 @@ interface TitleProps {
   onClaimBonus: () => void;
   displayName: string;
   onRename: (name: string) => void;
+  onOpenRanking: () => void;
+  onOpenAccount: () => void;
 }
 
 export function Title({
@@ -22,6 +24,8 @@ export function Title({
   onClaimBonus,
   displayName,
   onRename,
+  onOpenRanking,
+  onOpenAccount,
 }: TitleProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(displayName);
@@ -103,6 +107,16 @@ export function Title({
         </div>
       )}
       <p className="title__buyIn">{S.BUY_IN_LABEL(buyInCost)}</p>
+
+      <div className="title__linkRow">
+        <button className="btn btn--ghost" onClick={onOpenRanking}>
+          {S.RANKING_BUTTON}
+        </button>
+        <button className="btn btn--ghost" onClick={onOpenAccount}>
+          {S.ACCOUNT_BUTTON}
+        </button>
+      </div>
+
       <p className="title__blurb">{S.TITLE_RULES_BLURB}</p>
     </div>
   );

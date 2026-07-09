@@ -204,3 +204,32 @@ export async function initWallet(): Promise<void> {
     userId = null; // フォールバック：localStorage のみで続行
   }
 }
+
+/** ゲーム終了（キャッシュアウト）のたびに呼ぶ。サーバー側の games_played をアトミックに+1する */
+export async function recordGameCompleted(): Promise<void> {
+  if (!client || !userId) return;
+  try {
+    await client.rpc('increment_games_played');
+  } catch {
+    // ランキング用の副次的な記録なのでベストエフォート。失敗してもゲーム進行には影響しない
+  }
+}
+
+export interface AccountUpgradeResult {
+  ok: boolean;
+  message: string;
+}
+
+/**
+ * 匿名アカウントをメール+パスワードの本アカウントへアップグレードする。
+ * 同じユーザーID（＝同じプロフィール・チップ残高）を維持したまま昇格するので、
+ * 機種変更やブラウザデータ削除後もサインインし直せば引き継げるようになる。
+ */
+export async function upgradeAccount(email: string, password: string): Promise<AccountUpgradeResult> {
+  if (!client || !userId) {
+    return { ok: false, message: 'オフラインモードのため利用できません（通信環境を確認してください）' };
+  }
+  const { error } = await client.auth.updateUser({ email, password });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: '確認メールを送信しました。メール内のリンクを開くと登録が完了します。' };
+}

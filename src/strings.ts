@@ -29,6 +29,25 @@ export const HELP_CHIPS_LINES = [
   '1日1回、デイリーボーナスでチップを受け取れる。連続で受け取るほどボーナス額が増える。',
 ];
 
+// --- ランキング ---
+export const RANKING_BUTTON = '🏆 ランキング';
+export const RANKING_TITLE = 'チップランキング';
+export const RANKING_EMPTY = 'ランキングを表示できません（通信環境を確認してください）';
+export const RANKING_LOADING = '読み込み中…';
+export const RANKING_GAMES_PLAYED = (n: number) => `${n}ゲーム`;
+export const RANKING_CLOSE = '閉じる';
+
+// --- アカウント ---
+export const ACCOUNT_BUTTON = 'アカウントを保存';
+export const ACCOUNT_TITLE = 'アカウントを保存';
+export const ACCOUNT_BLURB =
+  'メールアドレスを登録すると、機種変更やブラウザのデータ削除後も同じ進行状況（チップ・記録）を引き継げます。';
+export const ACCOUNT_EMAIL_LABEL = 'メールアドレス';
+export const ACCOUNT_PASSWORD_LABEL = 'パスワード（6文字以上）';
+export const ACCOUNT_SUBMIT = '登録する';
+export const ACCOUNT_CLOSE = '閉じる';
+export const ACCOUNT_SUBMITTING = '送信中…';
+
 export const TUTORIAL_STEPS: { title: string; body: string }[] = [
   {
     title: '① 自分の1枚だけ見えない',

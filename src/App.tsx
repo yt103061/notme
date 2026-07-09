@@ -32,6 +32,8 @@ import { ActionBar } from './components/ActionBar';
 import { ShowdownReveal } from './components/ShowdownReveal';
 import { ResultScreen } from './components/ResultScreen';
 import { HelpModal } from './components/HelpModal';
+import { RankingScreen } from './components/RankingScreen';
+import { AccountModal } from './components/AccountModal';
 import { sfx } from './audio/sfx';
 import { analytics } from './platform/analytics';
 import {
@@ -44,6 +46,7 @@ import {
   initWallet,
   getDisplayName,
   setDisplayName,
+  recordGameCompleted,
   SIT_DOWN_STACK,
   type DailyBonusStatus,
 } from './platform/wallet';
@@ -73,6 +76,8 @@ export default function App() {
   const [heroToast, setHeroToast] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [rankingOpen, setRankingOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [showVS, setShowVS] = useState(false);
   const [chipBalance, setChipBalance] = useState(() => getBalance());
   const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
@@ -368,6 +373,7 @@ export default function App() {
       setChipDelta(delta);
       setChipBalance(newBalance);
       setDailyBonus(getDailyBonusStatus());
+      void recordGameCompleted();
       analytics.track('game_end', { stack: human.stack, chipDelta: delta });
       setShowdownOpen(false);
       setScreen('result');
@@ -548,6 +554,8 @@ export default function App() {
             onClaimBonus={handleClaimBonus}
             displayName={displayName}
             onRename={handleRename}
+            onOpenRanking={() => setRankingOpen(true)}
+            onOpenAccount={() => setAccountOpen(true)}
           />
         )}
         {screen === 'tutorial' && <Tutorial onFinish={handleTutorialFinish} />}
@@ -597,6 +605,8 @@ export default function App() {
       </main>
 
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} muted={muted} onToggleMute={toggleMute} />}
+      {rankingOpen && <RankingScreen onClose={() => setRankingOpen(false)} />}
+      {accountOpen && <AccountModal onClose={() => setAccountOpen(false)} />}
     </div>
   );
 }
