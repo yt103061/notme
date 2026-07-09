@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as S from '../strings';
-import type { DailyBonusStatus } from '../platform/wallet';
+import { AVATAR_OPTIONS, type DailyBonusStatus } from '../platform/wallet';
 
 interface TitleProps {
   onStart: () => void;
@@ -11,6 +11,8 @@ interface TitleProps {
   onClaimBonus: () => void;
   displayName: string;
   onRename: (name: string) => void;
+  avatar: string;
+  onChangeAvatar: (avatar: string) => void;
   onOpenRanking: () => void;
   onOpenAccount: () => void;
 }
@@ -24,11 +26,14 @@ export function Title({
   onClaimBonus,
   displayName,
   onRename,
+  avatar,
+  onChangeAvatar,
   onOpenRanking,
   onOpenAccount,
 }: TitleProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(displayName);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
 
   function commit() {
     setEditing(false);
@@ -40,9 +45,32 @@ export function Title({
   return (
     <div className="title">
       <div className="title__profile">
-        <span className="title__profileAvatar" aria-hidden>
-          🙂
-        </span>
+        <button
+          className="title__profileAvatar"
+          onClick={() => setAvatarPickerOpen((v) => !v)}
+          aria-label="アバターを変更"
+        >
+          {avatar}
+        </button>
+        {avatarPickerOpen && (
+          <>
+            <div className="title__avatarOverlay" onClick={() => setAvatarPickerOpen(false)} />
+            <div className="title__avatarPicker">
+              {AVATAR_OPTIONS.map((a) => (
+                <button
+                  key={a}
+                  className={`title__avatarOption ${a === avatar ? 'title__avatarOption--active' : ''}`}
+                  onClick={() => {
+                    onChangeAvatar(a);
+                    setAvatarPickerOpen(false);
+                  }}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         {editing ? (
           <input
             className="title__nameInput"

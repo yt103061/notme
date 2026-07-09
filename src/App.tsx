@@ -46,6 +46,8 @@ import {
   initWallet,
   getDisplayName,
   setDisplayName,
+  getAvatar,
+  setAvatar,
   recordGameCompleted,
   SIT_DOWN_STACK,
   type DailyBonusStatus,
@@ -83,6 +85,7 @@ export default function App() {
   const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
   const [chipDelta, setChipDelta] = useState(0);
   const [displayName, setName] = useState(() => getDisplayName());
+  const [avatar, setAvatarState] = useState(() => getAvatar());
 
   // 起動時にクラウド（Supabase）からウォレット／プロフィールをハイドレートする。
   // 未設定・失敗時は localStorage の値のまま（フォールバック）。
@@ -101,6 +104,10 @@ export default function App() {
 
   function handleRename(name: string) {
     setName(setDisplayName(name));
+  }
+
+  function handleChangeAvatar(next: string) {
+    setAvatarState(setAvatar(next));
   }
 
   function handleClaimBonus() {
@@ -554,6 +561,8 @@ export default function App() {
             onClaimBonus={handleClaimBonus}
             displayName={displayName}
             onRename={handleRename}
+            avatar={avatar}
+            onChangeAvatar={handleChangeAvatar}
             onOpenRanking={() => setRankingOpen(true)}
             onOpenAccount={() => setAccountOpen(true)}
           />

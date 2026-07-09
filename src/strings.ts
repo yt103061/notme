@@ -47,6 +47,12 @@ export const ACCOUNT_PASSWORD_LABEL = 'パスワード（6文字以上）';
 export const ACCOUNT_SUBMIT = '登録する';
 export const ACCOUNT_CLOSE = '閉じる';
 export const ACCOUNT_SUBMITTING = '送信中…';
+export const ACCOUNT_TAB_REGISTER = '新規登録';
+export const ACCOUNT_TAB_SIGNIN = 'ログイン';
+export const ACCOUNT_SIGNIN_BLURB =
+  'すでにメールアドレスを登録済みの場合はこちらでログインすると、そのアカウントのチップ・記録をこの端末に引き継げます。';
+export const ACCOUNT_SIGNIN_SUBMIT = 'ログインする';
+export const ACCOUNT_SIGNIN_SUBMITTING = 'ログイン中…';
 
 export const TUTORIAL_STEPS: { title: string; body: string }[] = [
   {

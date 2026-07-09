@@ -11,6 +11,7 @@ const BALANCE_KEY = 'notme_chip_balance';
 const LAST_BONUS_KEY = 'notme_last_bonus_date';
 const BONUS_STREAK_KEY = 'notme_bonus_streak';
 const NAME_KEY = 'notme_display_name';
+const AVATAR_KEY = 'notme_avatar';
 
 export const STARTING_BALANCE = 1000;
 /** ゲームに着席する際にウォレットから持ち込むスタック。ゲーム終了時に残りを払い戻す（キャッシュアウト） */
@@ -127,6 +128,20 @@ export function setDisplayName(name: string): string {
   return trimmed;
 }
 
+// ----- プロフィール（アバター） -----
+// 端末ローカルのみで完結する見た目設定（サーバー同期はしない。機種変更時はデフォルトに戻る）
+
+export const AVATAR_OPTIONS = ['🙂', '😎', '🤠', '🥷', '👑', '🐱', '🦊', '🐼', '🎩', '👻', '🐸', '🦄'];
+
+export function getAvatar(): string {
+  return localStorage.getItem(AVATAR_KEY) || AVATAR_OPTIONS[0];
+}
+
+export function setAvatar(avatar: string): string {
+  localStorage.setItem(AVATAR_KEY, avatar);
+  return avatar;
+}
+
 // ----- サーバー同期（Supabase） -----
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -232,4 +247,19 @@ export async function upgradeAccount(email: string, password: string): Promise<A
   const { error } = await client.auth.updateUser({ email, password });
   if (error) return { ok: false, message: error.message };
   return { ok: true, message: '確認メールを送信しました。メール内のリンクを開くと登録が完了します。' };
+}
+
+/**
+ * すでにメール+パスワードで登録済みのアカウントへログインし直す（別端末・データ削除後の引き継ぎ用）。
+ * 成功すると匿名セッションから該当アカウントのセッションへ切り替わるので、呼び出し側でページを
+ * リロードしてウォレット・プロフィールを新しいアカウントの内容で再ハイドレートする必要がある。
+ */
+export async function signInAccount(email: string, password: string): Promise<AccountUpgradeResult> {
+  const c = await getSupabaseClient();
+  if (!c) {
+    return { ok: false, message: 'オフラインモードのため利用できません（通信環境を確認してください）' };
+  }
+  const { error } = await c.auth.signInWithPassword({ email, password });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: 'ログインしました。反映しています…' };
 }
