@@ -1552,7 +1552,7 @@ body::before {
 }
 .cardFlight__piece {
   position: fixed;
-  transition: left 0.56s ease, top 0.56s ease, transform 0.56s ease;
+  will-change: left, top, transform;
 }
 .cardFlight__stack {
   position: relative;
