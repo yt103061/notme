@@ -42,6 +42,9 @@ import {
   cashOut,
   getDailyBonusStatus,
   claimDailyBonus,
+  initWallet,
+  getDisplayName,
+  setDisplayName,
   SIT_DOWN_STACK,
   type DailyBonusStatus,
 } from './platform/wallet';
@@ -74,6 +77,26 @@ export default function App() {
   const [chipBalance, setChipBalance] = useState(() => getBalance());
   const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
   const [chipDelta, setChipDelta] = useState(0);
+  const [displayName, setName] = useState(() => getDisplayName());
+
+  // 起動時にクラウド（Supabase）からウォレット／プロフィールをハイドレートする。
+  // 未設定・失敗時は localStorage の値のまま（フォールバック）。
+  useEffect(() => {
+    let cancelled = false;
+    initWallet().then(() => {
+      if (cancelled) return;
+      setChipBalance(getBalance());
+      setDailyBonus(getDailyBonusStatus());
+      setName(getDisplayName());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleRename(name: string) {
+    setName(setDisplayName(name));
+  }
 
   function handleClaimBonus() {
     const result = claimDailyBonus();
@@ -466,6 +489,8 @@ export default function App() {
             canAfford={canSitDown()}
             dailyBonus={dailyBonus}
             onClaimBonus={handleClaimBonus}
+            displayName={displayName}
+            onRename={handleRename}
           />
         )}
         {screen === 'tutorial' && <Tutorial onFinish={handleTutorialFinish} />}

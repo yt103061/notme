@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import * as S from '../strings';
 import type { DailyBonusStatus } from '../platform/wallet';
 
@@ -8,12 +9,68 @@ interface TitleProps {
   canAfford: boolean;
   dailyBonus: DailyBonusStatus;
   onClaimBonus: () => void;
+  displayName: string;
+  onRename: (name: string) => void;
 }
 
-export function Title({ onStart, chipBalance, buyInCost, canAfford, dailyBonus, onClaimBonus }: TitleProps) {
+export function Title({
+  onStart,
+  chipBalance,
+  buyInCost,
+  canAfford,
+  dailyBonus,
+  onClaimBonus,
+  displayName,
+  onRename,
+}: TitleProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(displayName);
+
+  function commit() {
+    setEditing(false);
+    const next = draft.trim();
+    if (next && next !== displayName) onRename(next);
+    else setDraft(displayName);
+  }
+
   return (
     <div className="title">
-      <div className="title__chipBadge">{S.CHIP_BALANCE_LABEL(chipBalance)}</div>
+      <div className="title__profile">
+        <span className="title__profileAvatar" aria-hidden>
+          🙂
+        </span>
+        {editing ? (
+          <input
+            className="title__nameInput"
+            value={draft}
+            autoFocus
+            maxLength={16}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commit();
+              if (e.key === 'Escape') {
+                setDraft(displayName);
+                setEditing(false);
+              }
+            }}
+          />
+        ) : (
+          <button
+            className="title__profileName"
+            onClick={() => {
+              setDraft(displayName);
+              setEditing(true);
+            }}
+          >
+            <span className="title__nameText">{displayName}</span>
+            <span className="title__editIcon" aria-hidden>
+              ✎
+            </span>
+          </button>
+        )}
+        <span className="title__profileChips">{S.CHIP_BALANCE_LABEL(chipBalance)}</span>
+      </div>
 
       <div className="title__fan" aria-hidden>
         <div className="title__fanCard title__fanCard--l" />
@@ -28,7 +85,8 @@ export function Title({ onStart, chipBalance, buyInCost, canAfford, dailyBonus, 
 
       {dailyBonus.available ? (
         <button className="btn btn--secondary title__bonusBtn" onClick={onClaimBonus}>
-          🎁 {S.DAILY_BONUS_BUTTON}（+{dailyBonus.amount}{S.CHIP_ICON}）
+          🎁 {S.DAILY_BONUS_BUTTON}（+{dailyBonus.amount}
+          {S.CHIP_ICON}）
         </button>
       ) : (
         <p className="title__bonusClaimed">{S.DAILY_BONUS_ALREADY_CLAIMED}</p>

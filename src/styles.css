@@ -274,19 +274,84 @@ body::before {
   padding: 24px;
   position: relative;
 }
-.title__chipBadge {
+.title__profile {
   position: absolute;
-  top: 6px;
+  top: 4px;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  background: rgba(20, 12, 44, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px 5px 6px;
+  max-width: calc(100vw - 32px);
+}
+.title__profileAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+.title__profileName {
+  background: none;
+  border: none;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 4px;
+  border-radius: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.title__nameText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 11em;
+}
+.title__profileName:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.title__editIcon {
+  font-size: 0.72rem;
+  color: var(--gold-hi);
+  opacity: 0.85;
+}
+.title__nameInput {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid var(--gold);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 3px 8px;
+  width: 9.5em;
+  outline: none;
+}
+.title__profileChips {
   background: linear-gradient(180deg, #ffe6a2, #ffc244);
   color: #6a3d05;
   border-radius: 999px;
-  padding: 7px 20px;
+  padding: 4px 14px;
   font-weight: 900;
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-variant-numeric: tabular-nums;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), 0 5px 12px rgba(90, 40, 10, 0.4);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
 }
 .title__fan {
   position: relative;

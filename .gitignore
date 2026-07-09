@@ -7,3 +7,7 @@ dist-ssr/
 .vscode/*
 !.vscode/extensions.json
 .vercel
+
+# local environment (Supabase keys). VITE_ vars are public but kept out of git by convention.
+.env
+.env.local
