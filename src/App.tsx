@@ -546,7 +546,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app app--${screen}`}>
       <header className="app__header">
         <span className="app__brand">{S.APP_NAME}</span>
         <button

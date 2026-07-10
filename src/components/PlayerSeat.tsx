@@ -51,10 +51,14 @@ export function PlayerSeat({
       </div>
 
       <div className="oppo__cards">
-        <CardView variant="hiddenOpponent" size="sm" />
-        <CardView variant="hiddenOpponent" size="sm" />
-        <div ref={notMeRef}>
+        <div className="oppo__hiddenStack" aria-label="相手の手札2枚">
+          <CardView variant="hiddenOpponent" size="xs" />
+          <CardView variant="hiddenOpponent" size="xs" />
+          <span>手札×2</span>
+        </div>
+        <div className="oppo__notMe" ref={notMeRef}>
           <CardView card={player.notMe} variant="faceUp" size="sm" highlighted />
+          <span>not me</span>
         </div>
       </div>
 
