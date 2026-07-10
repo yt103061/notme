@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { GameState } from '../engine/game';
+import { betLabel, type GameState, type TellKind } from '../engine/game';
 import type { Card } from '../engine/cards';
 import type { HandRank } from '../engine/evaluator';
 import { CardView } from './CardView';
@@ -12,6 +12,13 @@ import * as S from '../strings';
 function usesCard(rank: HandRank | undefined, card: Card): boolean {
   if (!rank) return true;
   return rank.usedCards.some((u) => u.suit === card.suit && u.rank === card.rank);
+}
+
+function tellIcon(tell: TellKind) {
+  if (tell === 'snap') return '⚡';
+  if (tell === 'tank') return '⏳';
+  if (tell === 'panic') return '!';
+  return '●';
 }
 
 interface ShowdownRevealProps {
@@ -118,6 +125,25 @@ export function ShowdownReveal({ state, onContinue, isFinalHand, heroId }: Showd
             <span className="showdown__communityLabel">場札</span>
           </div>
           {step >= 4 && <p className="showdown__unusedNote">{S.SHOWDOWN_UNUSED_NOTE}</p>}
+
+          {step >= 4 && state.players.some((p) => p.lastTell) && (
+            <div className="showdown__tellReview">
+              <p className="showdown__tellTitle">Tell review</p>
+              <div className="showdown__tellRows">
+                {state.players
+                  .filter((p) => p.lastTell)
+                  .map((p) => (
+                    <div key={p.id} className="showdown__tellRow">
+                      <strong>{p.name}</strong>
+                      <span>
+                        {p.lastTell!.reaction} / {betLabel(p.lastTell!.choice)} / {tellIcon(p.lastTell!.tell)} {p.lastTell!.tell}
+                        {p.lastTell!.wavered ? ' ≈' : ''}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
           <div className="showdown__opponents">
             {opponents.map((p, oi) => {

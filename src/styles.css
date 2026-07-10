@@ -2850,3 +2850,369 @@ body::before {
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
   }
 }
+
+/* ============================================================
+   Tell Poker visual system override
+   Dark cinematic palette from DESIGN.md, applied to the runnable app.
+   This replaces the previous bright arcade/purple felt look so gameplay
+   screens visually match the tell-driven not me poker design system.
+   ============================================================ */
+
+:root {
+  --bg-top: #05070D;
+  --bg-mid: #0B1020;
+  --bg-bottom: #121A2B;
+  --stage-glow: rgba(47, 128, 237, 0.22);
+
+  --felt: #0B1020;
+  --felt-hi: #121A2B;
+  --felt-lo: #05070D;
+  --felt-rim: #2A3448;
+
+  --gold: #2F80ED;
+  --gold-hi: #4A96FF;
+  --gold-deep: #1B5FB7;
+  --magenta: #FF5C7A;
+  --cyan: #4A96FF;
+  --violet: #9B6CFF;
+
+  --ink: #F4F7FB;
+  --ink-dim: #AAB6CC;
+  --ink-mute: #7D8AA3;
+
+  --danger: #FF5C7A;
+  --success: #4CD7A3;
+
+  --card-cream: #F4F7FB;
+  --card-red: #B91F3D;
+  --card-black: #05070D;
+
+  --shadow-pop: 0 18px 48px rgba(0, 0, 0, 0.48);
+  --shadow-flat: 0 10px 28px rgba(0, 0, 0, 0.36);
+  --shadow-flat-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: Cinzel, Georgia, 'Times New Roman', serif;
+}
+
+body {
+  background:
+    radial-gradient(80% 48% at 50% 0%, rgba(47, 128, 237, 0.24), transparent 62%),
+    radial-gradient(100% 70% at 50% 118%, rgba(155, 108, 255, 0.18), transparent 62%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-bottom) 100%);
+}
+body::before {
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(74, 150, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 82% 15%, rgba(170, 182, 204, 0.42), transparent),
+    radial-gradient(1px 1px at 68% 38%, rgba(245, 184, 75, 0.42), transparent),
+    radial-gradient(1.5px 1.5px at 28% 62%, rgba(155, 108, 255, 0.48), transparent);
+  opacity: 0.65;
+}
+
+.app__brand,
+.title__name {
+  color: var(--ink);
+  text-shadow: 0 0 22px rgba(47, 128, 237, 0.34), 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+.title__subtitle,
+.title__hook,
+.title__blurb,
+.title__bonusClaimed,
+.title__buyIn {
+  color: var(--ink-dim);
+}
+.title__profile,
+.arena__handLabel,
+.arena__heroName,
+.oppo__plate {
+  background: rgba(18, 26, 43, 0.82);
+  border-color: rgba(170, 182, 204, 0.22);
+  box-shadow: var(--shadow-flat-sm);
+}
+.title__profileChips,
+.arena__heroScore,
+.oppo__score {
+  background: rgba(47, 128, 237, 0.22);
+  color: var(--ink);
+  border: 1px solid rgba(74, 150, 255, 0.42);
+}
+
+.btn {
+  background: #1B2740;
+  color: var(--ink);
+  border-color: #2A3448;
+  border-radius: 16px;
+  min-height: 44px;
+  box-shadow: var(--shadow-flat-sm);
+}
+.btn--primary {
+  background: #2F80ED;
+  color: #F4F7FB;
+  border-color: #4A96FF;
+  box-shadow: 0 10px 24px rgba(47, 128, 237, 0.28);
+}
+.btn--secondary {
+  background: #121A2B;
+  color: #F4F7FB;
+  border-color: #2A3448;
+}
+.btn--danger {
+  background: rgba(255, 92, 122, 0.14);
+  color: #F4F7FB;
+  border-color: rgba(255, 92, 122, 0.48);
+}
+.btn--ghost {
+  background: rgba(18, 26, 43, 0.48);
+  color: #AAB6CC;
+  border-color: rgba(170, 182, 204, 0.24);
+}
+.btn--icon {
+  background: #1B2740;
+  color: #F4F7FB;
+  border-color: #2A3448;
+}
+
+.title__fanCard,
+.title__fanCard--r {
+  background:
+    repeating-linear-gradient(135deg, rgba(244, 247, 251, 0.08) 0 2px, transparent 2px 8px),
+    linear-gradient(160deg, #121A2B 0%, #0B1020 100%);
+  border-color: #2A3448;
+  box-shadow: var(--shadow-pop);
+}
+.title__fanCard--c {
+  background: radial-gradient(75% 60% at 50% 38%, rgba(47, 128, 237, 0.34), transparent 72%), #05070D;
+  border-color: #4A96FF;
+  color: #F4F7FB;
+}
+
+.vs { background: #05070D; }
+.vs__half--top {
+  background: linear-gradient(160deg, #121A2B, #05070D);
+}
+.vs__half--bottom {
+  background: linear-gradient(160deg, #1B2740, #0B1020);
+}
+.vs__badge {
+  color: #F4F7FB;
+  -webkit-text-stroke: 2px #2F80ED;
+  text-shadow: 0 0 24px rgba(47, 128, 237, 0.42), 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.arena__feltRim {
+  background:
+    radial-gradient(70% 60% at 50% 32%, rgba(27, 39, 64, 0.96) 0%, var(--felt) 48%, var(--felt-lo) 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(42, 52, 72, 0.9),
+    inset 0 0 42px rgba(0, 0, 0, 0.62),
+    0 28px 64px rgba(0, 0, 0, 0.48);
+}
+.arena__feltGlow {
+  background: radial-gradient(ellipse at center, rgba(47, 128, 237, 0.18), transparent 70%);
+}
+.arena__phaseHud {
+  background: linear-gradient(90deg, rgba(18, 26, 43, 0.94), rgba(11, 16, 32, 0.74));
+  border-color: rgba(74, 150, 255, 0.3);
+  box-shadow: var(--shadow-flat-sm);
+}
+.arena__phaseKicker {
+  background: #2F80ED;
+  color: #F4F7FB;
+}
+.arena__phaseText,
+.arena__centerLabel,
+.arena__potValue,
+.oppo__name {
+  color: #F4F7FB;
+}
+.arena__pot {
+  background: rgba(18, 26, 43, 0.92);
+  border-color: rgba(74, 150, 255, 0.34);
+}
+.arena__potLabel {
+  color: #AAB6CC;
+}
+.arena__community {
+  background: radial-gradient(80% 120% at 50% 0%, rgba(47, 128, 237, 0.12), transparent 70%);
+  border: 1px solid rgba(42, 52, 72, 0.74);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.42), var(--shadow-flat-sm);
+}
+.arena__emptySlot {
+  border-color: rgba(170, 182, 204, 0.35);
+  background: rgba(18, 26, 43, 0.6);
+}
+
+.oppo {
+  background: rgba(18, 26, 43, 0.68);
+  border: 1px solid rgba(42, 52, 72, 0.9);
+  border-radius: 16px;
+  padding: 4px;
+  box-shadow: var(--shadow-flat-sm);
+}
+.oppo--active .oppo__plate {
+  box-shadow: 0 0 0 2px #4A96FF, 0 8px 18px rgba(47, 128, 237, 0.32);
+}
+.oppo__status {
+  background: rgba(74, 150, 255, 0.16);
+  color: #AAB6CC;
+}
+.oppo__hiddenStack span,
+.oppo__notMe > span {
+  display: none;
+}
+.oppo__emote,
+.arena__heroEmote {
+  background: #1B2740;
+  color: #F4F7FB;
+  border: 1px solid rgba(170, 182, 204, 0.2);
+  box-shadow: var(--shadow-flat-sm);
+}
+.oppo__emote::after,
+.arena__heroEmote::after {
+  border-top-color: #1B2740;
+  background: #1B2740;
+}
+.oppo__decision,
+.arena__heroDecision {
+  border: 1px solid rgba(244, 247, 251, 0.14);
+  box-shadow: var(--shadow-flat-sm);
+}
+.oppo__decision--stay,
+.arena__heroDecision--stay {
+  background: #2F80ED;
+  color: #F4F7FB;
+}
+.oppo__decision--fold,
+.arena__heroDecision--fold,
+.oppo__foldedBadge,
+.arena__heroFolded {
+  background: rgba(255, 92, 122, 0.16);
+  color: #F4F7FB;
+  border: 1px solid rgba(255, 92, 122, 0.42);
+}
+
+.card--face {
+  background: #F4F7FB;
+  box-shadow: inset 0 0 0 1px rgba(5, 7, 13, 0.16), var(--shadow-flat-sm);
+}
+.card--hidden-opponent {
+  background:
+    repeating-linear-gradient(45deg, rgba(244, 247, 251, 0.08) 0 2px, transparent 2px 8px),
+    #121A2B;
+  border: 1.5px solid #2A3448;
+  box-shadow: var(--shadow-flat-sm);
+}
+.card--hidden-self {
+  background:
+    radial-gradient(75% 60% at 50% 40%, rgba(74, 150, 255, 0.28), transparent 72%),
+    repeating-linear-gradient(135deg, rgba(244, 247, 251, 0.06) 0 2px, transparent 2px 7px),
+    #070A12;
+  border: 2px solid #4A96FF;
+  color: #F4F7FB;
+  box-shadow: 0 0 0 1px rgba(74, 150, 255, 0.42), 0 18px 48px rgba(47, 128, 237, 0.24), 0 14px 34px rgba(0, 0, 0, 0.46);
+}
+.card--highlighted {
+  box-shadow: 0 0 0 2px #4A96FF, var(--shadow-flat-sm);
+}
+.flip--glow .flip__face--front .card,
+.flip--glow .flip__face--back .card {
+  box-shadow: 0 0 24px rgba(74, 150, 255, 0.48), inset 0 0 0 1px rgba(5, 7, 13, 0.12);
+}
+
+.actionbar {
+  background: rgba(11, 16, 32, 0.92);
+  border-color: rgba(74, 150, 255, 0.28);
+  border-radius: 16px;
+  box-shadow: var(--shadow-pop);
+}
+.actionbar__prompt {
+  color: #F4F7FB;
+}
+.actionbar__kicker {
+  color: #4A96FF;
+}
+.actionbar__betBtn,
+.actionbar__commandBtn,
+.actionbar__targetBtn {
+  min-height: max(44px, 64px);
+}
+
+/* Tell Poker mechanics UI: live tells and showdown review */
+.oppo__tellStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  animation: badgeIn 0.22s ease backwards;
+}
+.oppo__tell {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 247, 251, 0.14);
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(27, 39, 64, 0.86);
+  color: #AAB6CC;
+}
+.oppo__tell--snap {
+  color: #4A96FF;
+  background: rgba(74, 150, 255, 0.16);
+}
+.oppo__tell--tank {
+  color: #F5B84B;
+  background: repeating-linear-gradient(90deg, rgba(245, 184, 75, 0.24), rgba(245, 184, 75, 0.24) 4px, rgba(245, 184, 75, 0.08) 4px, rgba(245, 184, 75, 0.08) 8px);
+}
+.oppo__tell--panic {
+  color: #FF5C7A;
+  background: repeating-linear-gradient(45deg, rgba(255, 92, 122, 0.24), rgba(255, 92, 122, 0.24) 5px, rgba(255, 92, 122, 0.08) 5px, rgba(255, 92, 122, 0.08) 10px);
+}
+.oppo__waver {
+  color: #9B6CFF;
+  text-shadow: 0 0 10px rgba(155, 108, 255, 0.7);
+}
+.showdown__tellReview {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 10px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(18, 26, 43, 0.82);
+  border: 1px solid rgba(74, 150, 255, 0.24);
+}
+.showdown__tellTitle {
+  margin: 0 0 2px;
+  color: #AAB6CC;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.showdown__tellRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.showdown__tellRow {
+  min-width: 0;
+  border-radius: 12px;
+  padding: 6px;
+  background: rgba(27, 39, 64, 0.74);
+  color: #F4F7FB;
+  font-size: 0.66rem;
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.showdown__tellRow span:last-child {
+  color: #AAB6CC;
+  white-space: nowrap;
+}

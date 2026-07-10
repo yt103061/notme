@@ -3,7 +3,7 @@
 // クライアントは Postgres の online_* テーブルに直接アクセスしない。
 
 import { getSupabaseClient } from './supabase';
-import type { BetChoice, ExchangeAction, GameState, Phase } from '../engine/game';
+import type { BetChoice, DecisionTell, ExchangeAction, GameState, Phase } from '../engine/game';
 
 export interface OnlinePlayerInfo {
   seat: number;
@@ -66,8 +66,8 @@ export function fetchOnlineView(roomId: string) {
   return call<OnlineView>({ action: 'view', roomId });
 }
 
-export function submitOnlineBet(roomId: string, choice: BetChoice) {
-  return call<OnlineView>({ action: 'bet', roomId, choice });
+export function submitOnlineBet(roomId: string, choice: BetChoice, tell?: DecisionTell) {
+  return call<OnlineView>({ action: 'bet', roomId, choice, tell });
 }
 
 export function submitOnlineExchange(roomId: string, exchange: ExchangeAction) {
