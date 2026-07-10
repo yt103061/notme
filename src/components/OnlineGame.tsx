@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Table } from './Table';
 import { ActionBar } from './ActionBar';
 import { ShowdownReveal } from './ShowdownReveal';
-import { activePlayers, isGameOver, gameWinners, type BetChoice, type ExchangeAction } from '../engine/game';
+import { activePlayers, isGameOver, gameWinners, type BetChoice, type DecisionTell, type ExchangeAction } from '../engine/game';
 import {
   fetchOnlineView,
   submitOnlineBet,
@@ -37,8 +37,8 @@ export function OnlineGame({ roomId, seat, onExit }: OnlineGameProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  async function handleBet(choice: BetChoice) {
-    const r = await submitOnlineBet(roomId, choice);
+  async function handleBet(choice: BetChoice, tell: DecisionTell) {
+    const r = await submitOnlineBet(roomId, choice, tell);
     if (r.ok && r.data) setView(r.data);
     else setError(r.error ?? S.ONLINE_ERROR_GENERIC);
   }

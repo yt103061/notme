@@ -27,6 +27,22 @@ export interface Hint {
 
 /** 各ハンドの賭け選択。せーの同時制で選ぶ */
 export type BetChoice = 'fold' | 'stay' | 'raise' | 'big';
+export type TellKind = 'snap' | 'steady' | 'tank' | 'panic';
+
+export interface DecisionTell {
+  choice: BetChoice;
+  tell: TellKind;
+  wavered: boolean;
+  reaction: string;
+  elapsedMs: number;
+}
+
+export type BetInput = BetChoice | DecisionTell;
+
+export function normalizeBetInput(input: BetInput): DecisionTell {
+  if (typeof input !== 'string') return input;
+  return { choice: input, tell: 'steady', wavered: false, reaction: '…', elapsedMs: 0 };
+}
 
 /** ゲーム開始時に全員へ配るスタック（ウォレットから持ち込むチップ） */
 export const STARTING_STACK = 300;
@@ -56,6 +72,7 @@ export interface PlayerState {
   staked: number; // このハンドでポットに積んだ累計
   hint: Hint | null; // 現在の notMe についてのヒント。配札時に必ず1つ付与され、notMe が変わるたびに引き直す
   stolenBy: number | null; // このハンドで自分の notMe を奪った相手の id（お互い奪い合いの検知用）
+  lastTell: DecisionTell | null; // 直近のベットで漏れたテル（思考時間・迷い・リアクション）
 }
 
 export type ExchangeAction =
@@ -102,6 +119,7 @@ export function createGame(rng: Rng, playerCount = 4): GameState {
     staked: 0,
     hint: null,
     stolenBy: null,
+    lastTell: null,
   }));
   return {
     players,
@@ -140,6 +158,7 @@ export function dealHand(state: GameState): GameState {
       // 配札時点で全員に自分の notMe についてのベースヒントを1つ与える
       hint: randomHint(notMe, state.rng),
       stolenBy: null,
+      lastTell: null,
     };
   });
   // 場札の1枚目は配札と同時に公開する。判断材料ゼロでの①降り判断を避けるため
@@ -171,16 +190,18 @@ export function betAmountFor(player: PlayerState, choice: BetChoice): number {
  * 同時制の賭け判断。各プレイヤーの選択（フォールド／ステイ／レイズ／大勝負）を適用し、
  * ステイ以上はそのラウンドのチップをポットへ積む。
  */
-export function applyBets(state: GameState, choices: Record<number, BetChoice>): GameState {
+export function applyBets(state: GameState, choices: Record<number, BetInput>): GameState {
   let pot = state.pot;
   const players = state.players.map((p) => {
     if (p.folded) return p;
-    const choice = choices[p.id];
-    if (choice === undefined) return p;
-    if (choice === 'fold') return { ...p, folded: true };
+    const input = choices[p.id];
+    if (input === undefined) return p;
+    const tell = normalizeBetInput(input);
+    const choice = tell.choice;
+    if (choice === 'fold') return { ...p, folded: true, lastTell: tell };
     const amount = betAmountFor(p, choice);
     pot += amount;
-    return { ...p, stack: p.stack - amount, staked: p.staked + amount };
+    return { ...p, stack: p.stack - amount, staked: p.staked + amount, lastTell: tell };
   });
   return { ...state, players, pot };
 }
