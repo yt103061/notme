@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Card } from '../engine/cards';
-import { betLabel, type BetChoice, type GameState, type PlayerState } from '../engine/game';
+import { betLabel, type DecisionTell, type GameState, type PlayerState } from '../engine/game';
 import { CardView, type CardVariant } from './CardView';
 import { FlipCard } from './FlipCard';
 import { PlayerSeat } from './PlayerSeat';
@@ -25,7 +25,7 @@ interface TableProps {
   emotes: Record<number, string>;
   actingPlayerId?: number;
   /** せーの同時公開中：playerId -> その人の賭け選択 */
-  decisionReveal?: Record<number, BetChoice> | null;
+  decisionReveal?: Record<number, DecisionTell> | null;
   flight?: FlightLegSpec[] | null;
   onFlightSettle?: () => void;
   heroToast?: string | null;
@@ -83,7 +83,7 @@ export function Table({
   const opponents =
     heroId !== undefined ? state.players.filter((p) => p.id !== heroId) : state.players.filter((p) => !p.isHuman);
 
-  const badgeFor = (id: number): BetChoice | undefined => {
+  const tellFor = (id: number): DecisionTell | undefined => {
     if (!decisionReveal || !(id in decisionReveal)) return undefined;
     return decisionReveal[id];
   };
@@ -101,7 +101,8 @@ export function Table({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.community.length]);
 
-  const humanBadge = badgeFor(human.id);
+  const humanTell = tellFor(human.id);
+  const humanBadge = humanTell?.choice;
   const phaseCopy = phaseMeta(state.phase);
 
   return (
@@ -134,7 +135,7 @@ export function Table({
             player={p}
             emote={emotes[p.id]}
             isActingNow={actingPlayerId === p.id}
-            decisionBadge={badgeFor(p.id)}
+            decisionTell={tellFor(p.id)}
             badgeDelaySec={badgeDelay(p.id)}
             notMeRef={registerNotMeRef(p.id)}
           />

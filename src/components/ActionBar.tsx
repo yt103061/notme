@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { BET_AMOUNTS, type BetChoice, type PlayerState } from '../engine/game';
+import { useEffect, useState } from 'react';
+import { BET_AMOUNTS, type BetChoice, type DecisionTell, type PlayerState, type TellKind } from '../engine/game';
 import { CardView } from './CardView';
 import * as S from '../strings';
 
 interface DecisionModeProps {
   mode: 'decision';
   stack: number;
-  onBet: (choice: BetChoice) => void;
+  onBet: (choice: BetChoice, tell: DecisionTell) => void;
 }
 
 interface ExchangeModeProps {
@@ -26,6 +26,26 @@ type ActionBarProps = DecisionModeProps | ExchangeModeProps | WaitingModeProps;
 
 export function ActionBar(props: ActionBarProps) {
   const [pickingTarget, setPickingTarget] = useState(false);
+  const [decisionStartedAt, setDecisionStartedAt] = useState(() => Date.now());
+  const [hoveredChoices, setHoveredChoices] = useState<BetChoice[]>([]);
+
+  useEffect(() => {
+    setDecisionStartedAt(Date.now());
+    setHoveredChoices([]);
+  }, [props.mode]);
+
+  function markIntent(choice: BetChoice) {
+    setHoveredChoices((items) => (items[items.length - 1] === choice ? items : [...items, choice]));
+  }
+
+  function tellFor(choice: BetChoice): DecisionTell {
+    const elapsedMs = Date.now() - decisionStartedAt;
+    const tell: TellKind = elapsedMs < 1400 ? 'snap' : elapsedMs < 4200 ? 'steady' : elapsedMs < 8500 ? 'tank' : 'panic';
+    const unique = new Set([...hoveredChoices, choice]);
+    const wavered = unique.size > 1;
+    const reaction = choice === 'big' ? '😏 勝負' : choice === 'raise' ? '🤔 上げる' : choice === 'fold' ? '… 降り' : '🙂 様子見';
+    return { choice, tell, wavered, reaction, elapsedMs };
+  }
 
   if (props.mode === 'decision') {
     const { stack, onBet } = props;
@@ -36,18 +56,20 @@ export function ActionBar(props: ActionBarProps) {
           <p className="actionbar__prompt">{S.YOUR_TURN_DECIDE}</p>
         </div>
         <div className="actionbar__bets">
-          <button className="btn btn--danger actionbar__betBtn" onClick={() => onBet('fold')}>
+          <button className="btn btn--danger actionbar__betBtn" onPointerEnter={() => markIntent('fold')} onFocus={() => markIntent('fold')} onClick={() => onBet('fold', tellFor('fold'))}>
             <span>{S.ACTION_FOLD}</span>
             <span className="actionbar__help">{S.ACTION_FOLD_HELP}</span>
           </button>
-          <button className="btn btn--ghost actionbar__betBtn" onClick={() => onBet('stay')}>
+          <button className="btn btn--ghost actionbar__betBtn" onPointerEnter={() => markIntent('stay')} onFocus={() => markIntent('stay')} onClick={() => onBet('stay', tellFor('stay'))}>
             <span>{S.ACTION_STAY}</span>
             <span className="actionbar__betAmt">+{S.CHIP_ICON}{BET_AMOUNTS.stay}</span>
             <span className="actionbar__help">{S.ACTION_STAY_HELP}</span>
           </button>
           <button
             className="btn btn--secondary actionbar__betBtn"
-            onClick={() => onBet('raise')}
+            onPointerEnter={() => markIntent('raise')}
+            onFocus={() => markIntent('raise')}
+            onClick={() => onBet('raise', tellFor('raise'))}
             disabled={stack < BET_AMOUNTS.stay}
           >
             <span>{S.ACTION_RAISE}</span>
@@ -56,7 +78,9 @@ export function ActionBar(props: ActionBarProps) {
           </button>
           <button
             className="btn btn--primary actionbar__betBtn"
-            onClick={() => onBet('big')}
+            onPointerEnter={() => markIntent('big')}
+            onFocus={() => markIntent('big')}
+            onClick={() => onBet('big', tellFor('big'))}
             disabled={stack < BET_AMOUNTS.raise}
           >
             <span>{S.ACTION_BIG}</span>

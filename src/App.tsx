@@ -13,6 +13,8 @@ import {
   type GameState,
   type ExchangeAction,
   type BetChoice,
+  type DecisionTell,
+  type TellKind,
 } from './engine/game';
 import { createRng } from './engine/cards';
 import {
@@ -72,9 +74,9 @@ export default function App() {
   const [log, setLog] = useState<string[]>([]);
   const [emotes, setEmotes] = useState<Record<number, string>>({});
   const [round, setRound] = useState<1 | 2>(1);
-  const [aiBets, setAiBets] = useState<Record<number, BetChoice> | null>(null);
+  const [aiBets, setAiBets] = useState<Record<number, DecisionTell> | null>(null);
   const [exchangeQueue, setExchangeQueue] = useState<number[]>([]);
-  const [decisionReveal, setDecisionReveal] = useState<Record<number, BetChoice> | null>(null);
+  const [decisionReveal, setDecisionReveal] = useState<Record<number, DecisionTell> | null>(null);
   const [showdownOpen, setShowdownOpen] = useState(false);
   const [flight, setFlight] = useState<{ legs: FlightLegSpec[]; nextState: GameState } | null>(null);
   const [heroToast, setHeroToast] = useState<string | null>(null);
@@ -249,14 +251,33 @@ export default function App() {
     setExchangeQueue((q) => q.slice(1));
   }
 
+  function synthesizeAiTell(choice: BetChoice, winProb: number, personalityId: PersonalityId): DecisionTell {
+    const elapsedMs = Math.round(700 + rng() * 9200);
+    const tell: TellKind = elapsedMs < 1400 ? 'snap' : elapsedMs < 4200 ? 'steady' : elapsedMs < 8500 ? 'tank' : 'panic';
+    const bluffy = (choice === 'big' || choice === 'raise') && winProb < 0.36;
+    const wavered = bluffy || (tell === 'tank' && rng() < 0.45) || (tell === 'panic' && rng() < 0.7);
+    const reaction =
+      choice === 'fold'
+        ? '… 沈黙'
+        : bluffy
+          ? '😏 勝負でしょ'
+          : winProb >= 0.5
+            ? '🙂 手応えあり'
+            : personalityId === 'tricky'
+              ? '🎭 読める？'
+              : '🤔 迷う';
+    return { choice, tell, wavered, reaction, elapsedMs };
+  }
+
   /** そのラウンドの AI 全員の賭け判断と勝率をまとめて計算 */
   function computeAiRound(s: GameState, r: 1 | 2) {
-    const bets: Record<number, BetChoice> = {};
+    const bets: Record<number, DecisionTell> = {};
     const equities: Record<number, number> = {};
     for (const p of activePlayers(s)) {
       if (p.isHuman) continue;
-      const { choice, winProb } = decideBet(s, p.id, personalityFor(p.id), rng, r);
-      bets[p.id] = choice;
+      const personality = personalityFor(p.id);
+      const { choice, winProb } = decideBet(s, p.id, personality, rng, r);
+      bets[p.id] = synthesizeAiTell(choice, winProb, personality.id);
       equities[p.id] = winProb;
     }
     return { bets, equities };
@@ -266,12 +287,13 @@ export default function App() {
     setLog((l) => [...l, msg].slice(-6));
   }
 
-  function appendBetLog(s: GameState, choices: Record<number, BetChoice>) {
+  function appendBetLog(s: GameState, choices: Record<number, DecisionTell>) {
     for (const p of activePlayers(s)) {
-      const choice = choices[p.id];
-      if (choice === undefined) continue;
-      if (choice === 'fold') appendLog(S.FOLD_LOG(p.name));
-      else if (choice !== 'stay') appendLog(S.BET_LOG(p.name, betAmountFor(p, choice)));
+      const tell = choices[p.id];
+      if (tell === undefined) continue;
+      const choice = tell.choice;
+      if (choice === 'fold') appendLog(`${S.FOLD_LOG(p.name)} / ${tell.tell}${tell.wavered ? '≈' : ''}`);
+      else if (choice !== 'stay') appendLog(`${S.BET_LOG(p.name, betAmountFor(p, choice))} / ${tell.tell}${tell.wavered ? '≈' : ''}`);
     }
   }
 
@@ -334,11 +356,11 @@ export default function App() {
 
   // ----- せーの同時公開 -----
 
-  function runDecisionReveal(s: GameState, choices: Record<number, BetChoice>, r: 1 | 2) {
+  function runDecisionReveal(s: GameState, choices: Record<number, DecisionTell>, r: 1 | 2) {
     setDecisionReveal(choices);
     const ids = activePlayers(s).map((p) => p.id);
     ids.forEach((id, i) => {
-      window.setTimeout(() => sfx.play(choices[id] === 'fold' ? 'fold' : 'pop'), 250 + i * 220);
+      window.setTimeout(() => sfx.play(choices[id]?.choice === 'fold' ? 'fold' : 'pop'), 250 + i * 220);
     });
     const total = 250 + ids.length * 220 + 900;
     window.setTimeout(() => {
@@ -354,11 +376,11 @@ export default function App() {
     }, total);
   }
 
-  function handleBet(choice: BetChoice) {
+  function handleBet(choice: BetChoice, tell: DecisionTell) {
     if (!state || !aiBets) return;
     sfx.play('tap');
-    analytics.track(choice === 'fold' ? 'fold' : 'bet', { round, choice });
-    const choices: Record<number, BetChoice> = { ...aiBets, 0: choice };
+    analytics.track(choice === 'fold' ? 'fold' : 'bet', { round, choice, tell: tell.tell, wavered: tell.wavered });
+    const choices: Record<number, DecisionTell> = { ...aiBets, 0: tell };
     setAiBets(null);
     runDecisionReveal(state, choices, round);
   }

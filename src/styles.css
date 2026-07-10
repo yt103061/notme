@@ -3000,3 +3000,83 @@ body::before {
 .actionbar__targetBtn {
   min-height: max(44px, 64px);
 }
+
+/* Tell Poker mechanics UI: live tells and showdown review */
+.oppo__tellStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  animation: badgeIn 0.22s ease backwards;
+}
+.oppo__tell {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 247, 251, 0.14);
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(27, 39, 64, 0.86);
+  color: #AAB6CC;
+}
+.oppo__tell--snap {
+  color: #4A96FF;
+  background: rgba(74, 150, 255, 0.16);
+}
+.oppo__tell--tank {
+  color: #F5B84B;
+  background: repeating-linear-gradient(90deg, rgba(245, 184, 75, 0.24), rgba(245, 184, 75, 0.24) 4px, rgba(245, 184, 75, 0.08) 4px, rgba(245, 184, 75, 0.08) 8px);
+}
+.oppo__tell--panic {
+  color: #FF5C7A;
+  background: repeating-linear-gradient(45deg, rgba(255, 92, 122, 0.24), rgba(255, 92, 122, 0.24) 5px, rgba(255, 92, 122, 0.08) 5px, rgba(255, 92, 122, 0.08) 10px);
+}
+.oppo__waver {
+  color: #9B6CFF;
+  text-shadow: 0 0 10px rgba(155, 108, 255, 0.7);
+}
+.showdown__tellReview {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 10px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(18, 26, 43, 0.82);
+  border: 1px solid rgba(74, 150, 255, 0.24);
+}
+.showdown__tellTitle {
+  margin: 0 0 2px;
+  color: #AAB6CC;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.showdown__tellRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.showdown__tellRow {
+  min-width: 0;
+  border-radius: 12px;
+  padding: 6px;
+  background: rgba(27, 39, 64, 0.74);
+  color: #F4F7FB;
+  font-size: 0.66rem;
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.showdown__tellRow span:last-child {
+  color: #AAB6CC;
+  white-space: nowrap;
+}

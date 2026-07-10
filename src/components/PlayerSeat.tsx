@@ -1,4 +1,4 @@
-import { betLabel, type BetChoice, type PlayerState } from '../engine/game';
+import { betLabel, type DecisionTell, type PlayerState, type TellKind } from '../engine/game';
 import { CardView } from './CardView';
 import * as S from '../strings';
 
@@ -8,19 +8,42 @@ interface PlayerSeatProps {
   player: PlayerState;
   emote?: string;
   isActingNow?: boolean;
-  /** せーの同時公開バッジ（賭け選択） */
-  decisionBadge?: BetChoice;
+  /** せーの同時公開バッジ＋漏れテル */
+  decisionTell?: DecisionTell;
   badgeDelaySec?: number;
   /** カードフライト演出の発着点として、このプレイヤーの notMe 要素を登録する */
   notMeRef?: (el: HTMLElement | null) => void;
 }
 
 /** 卓の向こう側に座る対戦相手。コンパクトな浮遊席。相手の not me は自分から見えている */
+function tellIcon(tell: TellKind) {
+  if (tell === 'snap') return '⚡';
+  if (tell === 'tank') return '⏳';
+  if (tell === 'panic') return '!';
+  return '●';
+}
+
+function TellStack({ tell, delaySec = 0 }: { tell?: DecisionTell | null; delaySec?: number }) {
+  if (!tell) return null;
+  return (
+    <div className="oppo__tellStack" style={{ animationDelay: `${delaySec}s` }}>
+      <div className={`oppo__decision oppo__decision--${tell.choice === 'fold' ? 'fold' : 'stay'}`}>
+        {tell.choice === 'fold' ? S.BADGE_FOLD : betLabel(tell.choice)}
+      </div>
+      <div className={`oppo__tell oppo__tell--${tell.tell}`}>
+        <span>{tellIcon(tell.tell)}</span>
+        <span>{tell.tell}</span>
+        {tell.wavered && <span className="oppo__waver">≈</span>}
+      </div>
+    </div>
+  );
+}
+
 export function PlayerSeat({
   player,
   emote,
   isActingNow,
-  decisionBadge,
+  decisionTell,
   badgeDelaySec = 0,
   notMeRef,
 }: PlayerSeatProps) {
@@ -30,10 +53,10 @@ export function PlayerSeat({
         .filter(Boolean)
         .join(' ')}
     >
-      {decisionBadge ? null : (
-        emote && !player.folded && (
-          <div key={emote} className="oppo__emote">
-            {emote}
+      {decisionTell ? null : (
+        (emote || player.lastTell?.reaction) && !player.folded && (
+          <div key={emote ?? player.lastTell?.reaction} className="oppo__emote">
+            {emote ?? player.lastTell?.reaction}
           </div>
         )
       )}
@@ -64,14 +87,7 @@ export function PlayerSeat({
 
       {player.folded && <div className="oppo__foldedBadge">降り</div>}
 
-      {decisionBadge && (
-        <div
-          className={`oppo__decision oppo__decision--${decisionBadge === 'fold' ? 'fold' : 'stay'}`}
-          style={{ animationDelay: `${badgeDelaySec}s` }}
-        >
-          {decisionBadge === 'fold' ? S.BADGE_FOLD : betLabel(decisionBadge)}
-        </div>
-      )}
+      <TellStack tell={decisionTell ?? player.lastTell} delaySec={badgeDelaySec} />
     </div>
   );
 }
