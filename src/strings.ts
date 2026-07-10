@@ -8,6 +8,9 @@ export const TITLE_START = 'はじめる';
 export const TITLE_START_AI = 'すぐ遊ぶ（AI戦）';
 export const TITLE_RANDOM_MATCH = 'ランダム対戦';
 export const TITLE_FRIEND_MATCH = '友だちと対戦';
+export const TITLE_START_AI_DESC = 'ひとりで読み合いを練習';
+export const TITLE_RANDOM_MATCH_DESC = 'コードなしで対人マッチ';
+export const TITLE_FRIEND_MATCH_DESC = 'ルームコードで集合';
 export const TITLE_RULES_BLURB =
   '手札2枚と場札2枚は見える。でも「not me」1枚だけは自分に見えない。相手の反応から、自分の本当の強さを読め。';
 

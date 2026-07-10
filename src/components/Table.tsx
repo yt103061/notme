@@ -93,6 +93,8 @@ export function Table({
   // 場札は「配られてすぐ」ではなく「一拍おいてめくれる」演出にする（表示アクションを明示するため）
   // めくり音自体はFlipCardが90度通過の瞬間に鳴らすため、ここではタイミングの制御のみ行う
   const [revealedCount, setRevealedCount] = useState(0);
+  const [potBurst, setPotBurst] = useState<number | null>(null);
+  const prevPotRef = useRef(state.pot);
   useEffect(() => {
     if (state.community.length > revealedCount) {
       const t = window.setTimeout(() => setRevealedCount(state.community.length), 320);
@@ -100,6 +102,14 @@ export function Table({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.community.length]);
+  useEffect(() => {
+    const diff = state.pot - prevPotRef.current;
+    prevPotRef.current = state.pot;
+    if (diff <= 0) return;
+    setPotBurst(diff);
+    const t = window.setTimeout(() => setPotBurst(null), 760);
+    return () => window.clearTimeout(t);
+  }, [state.pot]);
 
   const humanBadge = badgeFor(human.id);
   const phaseCopy = phaseMeta(state.phase);
@@ -148,6 +158,12 @@ export function Table({
           <span className="arena__potValue">
             {S.CHIP_ICON} {state.pot}
           </span>
+          {potBurst !== null && (
+            <span className="arena__potBurst">
+              +{potBurst}
+              {S.CHIP_ICON}
+            </span>
+          )}
         </div>
         <span className="arena__centerLabel">場札</span>
         <div className="arena__community">

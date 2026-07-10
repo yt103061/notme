@@ -88,7 +88,7 @@ export function ShowdownReveal({ state, onContinue, isFinalHand, heroId }: Showd
   const deltaPlus = (playerId: number): boolean => (result.chipDelta[playerId] ?? 0) >= 0;
 
   return (
-    <div className="showdown">
+    <div className={`showdown showdown--step-${step}`}>
       {step >= 4 && humanWon && <Confetti />}
       <h2 className="showdown__title">{S.SHOWDOWN_TITLE}</h2>
 
