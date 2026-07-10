@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BET_AMOUNTS, type BetChoice, type PlayerState } from '../engine/game';
+import { CardView } from './CardView';
 import * as S from '../strings';
 
 interface DecisionModeProps {
@@ -30,30 +31,37 @@ export function ActionBar(props: ActionBarProps) {
     const { stack, onBet } = props;
     return (
       <div className="actionbar">
-        <p className="actionbar__prompt">{S.YOUR_TURN_DECIDE}</p>
+        <div className="actionbar__heading">
+          <span className="actionbar__kicker">{S.ACTION_DOCK_DECISION_LABEL}</span>
+          <p className="actionbar__prompt">{S.YOUR_TURN_DECIDE}</p>
+        </div>
         <div className="actionbar__bets">
           <button className="btn btn--danger actionbar__betBtn" onClick={() => onBet('fold')}>
-            {S.ACTION_FOLD}
+            <span>{S.ACTION_FOLD}</span>
+            <span className="actionbar__help">{S.ACTION_FOLD_HELP}</span>
           </button>
           <button className="btn btn--ghost actionbar__betBtn" onClick={() => onBet('stay')}>
-            {S.ACTION_STAY}
+            <span>{S.ACTION_STAY}</span>
             <span className="actionbar__betAmt">+{S.CHIP_ICON}{BET_AMOUNTS.stay}</span>
+            <span className="actionbar__help">{S.ACTION_STAY_HELP}</span>
           </button>
           <button
             className="btn btn--secondary actionbar__betBtn"
             onClick={() => onBet('raise')}
             disabled={stack < BET_AMOUNTS.stay}
           >
-            {S.ACTION_RAISE}
+            <span>{S.ACTION_RAISE}</span>
             <span className="actionbar__betAmt">+{S.CHIP_ICON}{Math.min(BET_AMOUNTS.raise, stack)}</span>
+            <span className="actionbar__help">{S.ACTION_RAISE_HELP}</span>
           </button>
           <button
             className="btn btn--primary actionbar__betBtn"
             onClick={() => onBet('big')}
             disabled={stack < BET_AMOUNTS.raise}
           >
-            {S.ACTION_BIG}
+            <span>{S.ACTION_BIG}</span>
             <span className="actionbar__betAmt">+{S.CHIP_ICON}{Math.min(BET_AMOUNTS.big, stack)}</span>
+            <span className="actionbar__help">{S.ACTION_BIG_HELP}</span>
           </button>
         </div>
       </div>
@@ -69,13 +77,15 @@ export function ActionBar(props: ActionBarProps) {
             {props.opponents.map((o) => (
               <button
                 key={o.id}
-                className="btn btn--secondary"
+                className="btn btn--secondary actionbar__targetBtn"
                 onClick={() => {
                   setPickingTarget(false);
                   props.onExchangeSteal(o.id);
                 }}
               >
-                {o.name}
+                <CardView card={o.notMe} variant="faceUp" size="xs" highlighted />
+                <span>{o.name}</span>
+                <span className="actionbar__help">{S.ACTION_TARGET_STEAL_HELP}</span>
               </button>
             ))}
           </div>
@@ -87,20 +97,26 @@ export function ActionBar(props: ActionBarProps) {
     }
     return (
       <div className="actionbar">
-        <p className="actionbar__prompt">{S.YOUR_TURN_EXCHANGE}</p>
+        <div className="actionbar__heading">
+          <span className="actionbar__kicker">{S.ACTION_DOCK_EXCHANGE_LABEL}</span>
+          <p className="actionbar__prompt">{S.YOUR_TURN_EXCHANGE}</p>
+        </div>
         <div className="actionbar__row">
-          <button className="btn btn--primary" onClick={props.onExchangeDeck}>
-            {S.ACTION_EXCHANGE_DECK}
+          <button className="btn btn--primary actionbar__commandBtn" onClick={props.onExchangeDeck}>
+            <span>{S.ACTION_EXCHANGE_DECK}</span>
+            <span className="actionbar__help">{S.ACTION_EXCHANGE_DECK_HELP}</span>
           </button>
           <button
-            className="btn btn--secondary"
+            className="btn btn--secondary actionbar__commandBtn"
             onClick={() => setPickingTarget(true)}
             disabled={props.opponents.length === 0}
           >
-            {S.ACTION_EXCHANGE_STEAL}
+            <span>{S.ACTION_EXCHANGE_STEAL}</span>
+            <span className="actionbar__help">{S.ACTION_EXCHANGE_STEAL_HELP}</span>
           </button>
-          <button className="btn btn--ghost" onClick={props.onExchangePass}>
-            {S.ACTION_EXCHANGE_PASS}
+          <button className="btn btn--ghost actionbar__commandBtn" onClick={props.onExchangePass}>
+            <span>{S.ACTION_EXCHANGE_PASS}</span>
+            <span className="actionbar__help">{S.ACTION_EXCHANGE_PASS_HELP}</span>
           </button>
         </div>
       </div>

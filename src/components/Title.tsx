@@ -16,6 +16,7 @@ interface TitleProps {
   onOpenRanking: () => void;
   onOpenAccount: () => void;
   onOpenOnline: () => void;
+  onOpenRandomOnline: () => void;
 }
 
 export function Title({
@@ -32,6 +33,7 @@ export function Title({
   onOpenRanking,
   onOpenAccount,
   onOpenOnline,
+  onOpenRandomOnline,
 }: TitleProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(displayName);
@@ -127,9 +129,17 @@ export function Title({
       )}
 
       {canAfford ? (
-        <button className="btn btn--primary btn--large" onClick={onStart}>
-          {S.TITLE_START}
-        </button>
+        <div className="title__primaryActions">
+          <button className="btn btn--primary btn--large" onClick={onStart}>
+            {S.TITLE_START_AI}
+          </button>
+          <button className="btn btn--secondary btn--large" onClick={onOpenRandomOnline}>
+            {S.TITLE_RANDOM_MATCH}
+          </button>
+          <button className="btn btn--ghost" onClick={onOpenOnline}>
+            {S.TITLE_FRIEND_MATCH}
+          </button>
+        </div>
       ) : (
         <div className="title__insufficient">
           <p className="title__insufficientTitle">{S.INSUFFICIENT_CHIPS_TITLE}</p>
@@ -137,10 +147,6 @@ export function Title({
         </div>
       )}
       <p className="title__buyIn">{S.BUY_IN_LABEL(buyInCost)}</p>
-
-      <button className="btn btn--secondary" onClick={onOpenOnline}>
-        {S.ONLINE_BUTTON}
-      </button>
 
       <div className="title__linkRow">
         <button className="btn btn--ghost" onClick={onOpenRanking}>

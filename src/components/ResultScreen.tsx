@@ -14,6 +14,8 @@ interface ResultScreenProps {
   canAfford: boolean;
   dailyBonus: DailyBonusStatus;
   onClaimBonus: () => void;
+  onHome: () => void;
+  onRandomMatch: () => void;
 }
 
 export function ResultScreen({
@@ -24,6 +26,8 @@ export function ResultScreen({
   canAfford,
   dailyBonus,
   onClaimBonus,
+  onHome,
+  onRandomMatch,
 }: ResultScreenProps) {
   const [shared, setShared] = useState(false);
   const sorted = [...players].sort((a, b) => b.stack - a.stack);
@@ -100,6 +104,12 @@ export function ResultScreen({
       <div className="result__actions">
         <button className="btn btn--secondary" onClick={handleShare}>
           {shared ? 'コピーしました！' : S.SHARE_BUTTON}
+        </button>
+        <button className="btn btn--ghost" onClick={onHome}>
+          {S.ACTION_HOME}
+        </button>
+        <button className="btn btn--secondary" onClick={onRandomMatch}>
+          {S.PLAY_RANDOM_MATCH}
         </button>
         <button className="btn btn--primary" onClick={onPlayAgain} disabled={!canAfford}>
           {S.PLAY_AGAIN}
