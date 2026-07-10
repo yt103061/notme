@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tell Poker Mobile Preview</title>
+  <style>
+    :root {
+      --ink000: #05070D;
+      --ink100: #0B1020;
+      --ink200: #121A2B;
+      --ink300: #1B2740;
+      --line300: #2A3448;
+      --white900: #F4F7FB;
+      --white700: #AAB6CC;
+      --white500: #7D8AA3;
+      --blue500: #2F80ED;
+      --blue400: #4A96FF;
+      --red500: #FF5C7A;
+      --green500: #4CD7A3;
+      --amber500: #F5B84B;
+      --violet500: #9B6CFF;
+      --fontSans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --fontDisplay: Cinzel, Georgia, 'Times New Roman', serif;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --radius-control: 10px;
+      --radius-panel: 16px;
+      --radius-card: 18px;
+      --radius-pill: 999px;
+      --shadow-panel: 0 10px 28px rgba(0, 0, 0, 0.36);
+      --shadow-modal: 0 18px 48px rgba(0, 0, 0, 0.48);
+      --shadow-hidden: 0 0 0 1px rgba(74, 150, 255, 0.42), 0 18px 48px rgba(47, 128, 237, 0.24), 0 14px 34px rgba(0, 0, 0, 0.46);
+      --touch: 44px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% -10%, rgba(47,128,237,.22), transparent 34%), var(--ink000);
+      color: var(--white900);
+      font-family: var(--fontSans);
+      padding: 24px;
+    }
+    .page { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(320px, 430px) 1fr; gap: 24px; align-items: start; }
+    .intro { grid-column: 1 / -1; }
+    .eyebrow { color: var(--white700); text-transform: uppercase; letter-spacing: .08em; font: 800 11px/14px var(--fontSans); margin: 0 0 8px; }
+    h1 { font: 700 34px/40px var(--fontDisplay); letter-spacing: -.02em; margin: 0 0 8px; }
+    h2 { font: 700 24px/32px var(--fontSans); margin: 0 0 12px; }
+    p { color: var(--white700); margin: 0 0 14px; }
+    .phone {
+      width: min(100%, 390px);
+      min-height: 760px;
+      margin: 0 auto;
+      padding: 10px;
+      border: 1px solid rgba(244,247,251,.14);
+      border-radius: 32px;
+      background: linear-gradient(180deg, rgba(27,39,64,.9), rgba(5,7,13,.96));
+      box-shadow: var(--shadow-modal);
+    }
+    .screen {
+      min-height: 740px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 34%, rgba(74,150,255,.12), transparent 34%), var(--ink100);
+      display: grid;
+      grid-template-rows: 28% 20% 34% 18%;
+      border: 1px solid var(--line300);
+    }
+    .zone { padding: 10px; border-bottom: 1px solid rgba(42,52,72,.72); }
+    .zone:last-child { border-bottom: 0; }
+    .read-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; min-height: 108px; }
+    .opponent {
+      min-width: 0;
+      border-radius: var(--radius-panel);
+      background: var(--ink200);
+      border: 1px solid var(--line300);
+      box-shadow: var(--shadow-panel);
+      padding: 8px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 6px;
+      min-height: 138px;
+    }
+    .opponent--suspect { border-color: var(--violet500); background: linear-gradient(180deg, rgba(155,108,255,.18), var(--ink200)); }
+    .opponent--panic { border-color: var(--red500); background: repeating-linear-gradient(45deg, rgba(255,92,122,.13), rgba(255,92,122,.13) 5px, var(--ink200) 5px, var(--ink200) 12px); }
+    .opp-top { display: flex; justify-content: space-between; gap: 4px; font: 800 11px/14px var(--fontSans); letter-spacing: .06em; text-transform: uppercase; }
+    .stack { color: var(--white700); }
+    .mini-card { min-height: 44px; border-radius: 10px; display: grid; place-items: center; background: var(--white900); color: #05070D; font-weight: 900; font-size: 18px; }
+    .mini-card.red { color: #8A1026; }
+    .signal { min-height: 24px; border-radius: var(--radius-control); background: var(--ink300); color: var(--white900); display: flex; align-items: center; justify-content: center; padding: 2px 4px; font: 700 12px/16px var(--fontSans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tell-row { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+    .pill { min-height: 22px; border-radius: var(--radius-pill); padding: 2px 6px; display: inline-flex; align-items: center; gap: 3px; font: 800 11px/14px var(--fontSans); border: 1px solid rgba(244,247,251,.12); }
+    .bet-big { background: rgba(47,128,237,.22); color: var(--white900); }
+    .bet-stay { background: rgba(170,182,204,.14); color: var(--white900); }
+    .snap { background: rgba(74,150,255,.18); color: var(--blue400); }
+    .tank { background: repeating-linear-gradient(90deg, rgba(245,184,75,.26), rgba(245,184,75,.26) 4px, rgba(245,184,75,.08) 4px, rgba(245,184,75,.08) 8px); color: var(--amber500); }
+    .panic { background: repeating-linear-gradient(45deg, rgba(255,92,122,.28), rgba(255,92,122,.28) 5px, rgba(255,92,122,.08) 5px, rgba(255,92,122,.08) 10px); color: var(--red500); }
+    .waver { background: radial-gradient(circle, rgba(155,108,255,.28) 2px, transparent 3px); background-size: 8px 8px; color: var(--violet500); }
+    .community { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; height: 100%; }
+    .pot { text-align: center; border-radius: var(--radius-panel); background: rgba(18,26,43,.86); border: 1px solid var(--line300); padding: 8px; min-width: 82px; }
+    .pot strong { display: block; font-size: 20px; }
+    .card { min-height: 92px; border-radius: var(--radius-card); background: var(--white900); color: #05070D; display: grid; place-items: center; font-weight: 900; font-size: 26px; box-shadow: var(--shadow-panel); }
+    .card.red { color: #8A1026; }
+    .hero { display: grid; grid-template-rows: auto 1fr auto; gap: 8px; }
+    .hero-cards { display: grid; grid-template-columns: 1fr 1fr 1.05fr; gap: 8px; align-items: stretch; }
+    .hero .card { min-height: 132px; }
+    .hidden-card {
+      min-height: 132px;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--blue400);
+      background: radial-gradient(circle at 50% 42%, rgba(74,150,255,.24), transparent 28%), repeating-linear-gradient(135deg, rgba(244,247,251,.06), rgba(244,247,251,.06) 2px, transparent 2px, transparent 7px), #070A12;
+      color: var(--white900);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      box-shadow: var(--shadow-hidden);
+      padding: 8px;
+    }
+    .hidden-card strong { display: block; font-size: 34px; line-height: 1; }
+    .hidden-card span { color: var(--white700); font-size: 11px; line-height: 14px; }
+    .read-path { display: flex; justify-content: space-between; gap: 6px; color: var(--white700); font: 800 11px/14px var(--fontSans); text-transform: uppercase; letter-spacing: .06em; }
+    .action-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-items: center; background: rgba(5,7,13,.76); }
+    .btn { min-height: var(--touch); border-radius: var(--radius-panel); border: 1px solid var(--line300); background: var(--ink300); color: var(--white900); font-weight: 900; font-size: 13px; }
+    .btn.primary { background: var(--blue500); border-color: var(--blue400); box-shadow: 0 10px 24px rgba(47,128,237,.28); }
+    .btn.danger { background: rgba(255,92,122,.12); border-color: rgba(255,92,122,.38); }
+    .audit { display: grid; gap: 16px; }
+    .panel { background: rgba(18,26,43,.9); border: 1px solid var(--line300); border-radius: 24px; padding: 18px; box-shadow: var(--shadow-panel); }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+    .swatch { min-height: 64px; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; justify-content: end; border: 1px solid rgba(244,247,251,.12); font: 800 11px/14px var(--fontSans); }
+    .token-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .token-table th, .token-table td { border-bottom: 1px solid var(--line300); padding: 8px; text-align: left; color: var(--white700); }
+    .token-table th { color: var(--white900); }
+    @media (max-width: 860px) { body { padding: 12px; } .page { grid-template-columns: 1fr; } .phone { width: min(100%, 390px); } }
+    @media (max-width: 360px) { .read-board { grid-template-columns: repeat(2, minmax(0,1fr)); } .opponent:last-child { grid-column: 1 / -1; } .screen { grid-template-rows: 34% 18% 31% 17%; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="intro">
+      <p class="eyebrow">Tell Poker Design System</p>
+      <h1>Mobile-first “not me” poker read board</h1>
+      <p>Opponent tells are primary gameplay information: all three opponents remain visible without horizontal scrolling, alongside community cards, hero hand, hidden notMe tension, and the current action.</p>
+    </header>
+
+    <section class="phone" aria-label="Mobile tell poker preview">
+      <div class="screen">
+        <section class="zone">
+          <p class="eyebrow">Opponent Read Board · no horizontal scroll</p>
+          <div class="read-board">
+            <article class="opponent opponent--suspect">
+              <div class="opp-top"><span>MIRAI</span><span class="stack">240</span></div>
+              <div class="mini-card">A♠</div>
+              <div class="signal">😏 勝負でしょ</div>
+              <div class="tell-row"><span class="pill bet-big">Big</span><span class="pill tank">⏳ Tank</span><span class="pill waver">≈</span></div>
+            </article>
+            <article class="opponent">
+              <div class="opp-top"><span>KEI</span><span class="stack">180</span></div>
+              <div class="mini-card red">6♦</div>
+              <div class="signal">🙂 普通かな</div>
+              <div class="tell-row"><span class="pill bet-stay">Stay</span><span class="pill snap">⚡ Snap</span></div>
+            </article>
+            <article class="opponent opponent--panic">
+              <div class="opp-top"><span>SORA</span><span class="stack">310</span></div>
+              <div class="mini-card">K♣</div>
+              <div class="signal">… Silence</div>
+              <div class="tell-row"><span class="pill bet-big">Big</span><span class="pill panic">! Panic</span><span class="pill waver">≈</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="zone community" aria-label="Community cards and pot">
+          <div class="card red">Q♥</div>
+          <div class="pot"><span class="eyebrow">Pot</span><strong>180</strong></div>
+          <div class="card">9♣</div>
+        </section>
+
+        <section class="zone hero" aria-label="Hero hand and hidden not me">
+          <div class="read-path"><span>Hero hand</span><span>Hidden notMe</span></div>
+          <div class="hero-cards">
+            <div class="card">10♠</div>
+            <div class="card red">10♦</div>
+            <div class="hidden-card"><div><strong>?</strong><span>They can see it.<br>You cannot.</span></div></div>
+          </div>
+          <p class="eyebrow">Read path: hand + community → opponent tells → action</p>
+        </section>
+
+        <section class="zone action-bar" aria-label="Current action choices">
+          <button class="btn">Stay</button>
+          <button class="btn primary">Raise</button>
+          <button class="btn">Big</button>
+          <button class="btn danger">Fold</button>
+        </section>
+      </div>
+    </section>
+
+    <aside class="audit">
+      <section class="panel">
+        <h2>Tell states: color + icon + pattern</h2>
+        <p>Each tell is redundantly encoded for color-vision diversity and fast mobile reading.</p>
+        <div class="tell-row">
+          <span class="pill snap">⚡ Snap</span>
+          <span class="pill bet-stay">● Steady</span>
+          <span class="pill tank">⏳ Tank</span>
+          <span class="pill panic">! Panic</span>
+          <span class="pill waver">≈ Waver</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Primitive swatches</h2>
+        <div class="swatches">
+          <div class="swatch" style="background:#05070D">ink000<br>#05070D</div>
+          <div class="swatch" style="background:#0B1020">ink100<br>#0B1020</div>
+          <div class="swatch" style="background:#121A2B">ink200<br>#121A2B</div>
+          <div class="swatch" style="background:#1B2740">ink300<br>#1B2740</div>
+          <div class="swatch" style="background:#2F80ED">blue500<br>#2F80ED</div>
+          <div class="swatch" style="background:#F5B84B; color:#05070D">amber500<br>#F5B84B</div>
+          <div class="swatch" style="background:#FF5C7A">red500<br>#FF5C7A</div>
+          <div class="swatch" style="background:#9B6CFF">violet500<br>#9B6CFF</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Component token audit</h2>
+        <table class="token-table">
+          <tr><th>Component</th><th>Key rule</th></tr>
+          <tr><td>opponentReadBoard</td><td>fixed-grid, 3 columns, no horizontal scroll</td></tr>
+          <tr><td>opponentMiniPanel</td><td>44px tap target, compact readable density</td></tr>
+          <tr><td>hiddenNotMe</td><td>noise-mask + hidden tension shadow</td></tr>
+          <tr><td>actionBar</td><td>72px high, 44px buttons, one blue CTA</td></tr>
+        </table>
+      </section>
+    </aside>
+  </main>
+</body>
+</html>

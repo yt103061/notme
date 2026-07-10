@@ -1,0 +1,80 @@
+{
+  "primitive": {
+    "color": {
+      "ink000": "#05070D",
+      "ink100": "#0B1020",
+      "ink200": "#121A2B",
+      "ink300": "#1B2740",
+      "line300": "#2A3448",
+      "white900": "#F4F7FB",
+      "white700": "#AAB6CC",
+      "white500": "#7D8AA3",
+      "blue500": "#2F80ED",
+      "blue400": "#4A96FF",
+      "red500": "#FF5C7A",
+      "green500": "#4CD7A3",
+      "amber500": "#F5B84B",
+      "violet500": "#9B6CFF"
+    },
+    "font": {
+      "sans": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "display": "Cinzel, Georgia, 'Times New Roman', serif"
+    },
+    "space": { "0": "0px", "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "24px", "6": "32px", "7": "48px", "8": "64px" },
+    "radius": { "sm": "6px", "md": "10px", "lg": "16px", "xl": "24px", "card": "18px", "pill": "999px" },
+    "shadow": {
+      "none": "none",
+      "sm": "0 2px 8px rgba(0, 0, 0, 0.28)",
+      "md": "0 10px 28px rgba(0, 0, 0, 0.36)",
+      "lg": "0 18px 48px rgba(0, 0, 0, 0.48)",
+      "hiddenTension": "0 0 0 1px rgba(74, 150, 255, 0.42), 0 18px 48px rgba(47, 128, 237, 0.24), 0 14px 34px rgba(0, 0, 0, 0.46)"
+    },
+    "motion": { "fast": "120ms", "standard": "180ms", "slow": "280ms", "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+  },
+  "semantic": {
+    "color": {
+      "surfaceCanvas": "#05070D",
+      "surfaceTable": "#0B1020",
+      "surfacePanel": "#121A2B",
+      "surfaceRaised": "#1B2740",
+      "borderSubtle": "#2A3448",
+      "textPrimary": "#F4F7FB",
+      "textSecondary": "#AAB6CC",
+      "textMuted": "#7D8AA3",
+      "actionPrimary": "#2F80ED",
+      "actionPrimaryHover": "#4A96FF",
+      "tellSnap": "#4A96FF",
+      "tellSteady": "#AAB6CC",
+      "tellTank": "#F5B84B",
+      "tellPanic": "#FF5C7A",
+      "tellWaver": "#9B6CFF",
+      "statePositive": "#4CD7A3",
+      "stateDanger": "#FF5C7A",
+      "hiddenCard": "#070A12"
+    },
+    "typography": {
+      "display": { "family": "Cinzel, Georgia, 'Times New Roman', serif", "size": "34px", "lineHeight": "40px", "weight": 700, "letterSpacing": "-0.02em" },
+      "title": { "family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "size": "24px", "lineHeight": "32px", "weight": 700, "letterSpacing": "-0.01em" },
+      "readLabel": { "family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "size": "12px", "lineHeight": "16px", "weight": 800, "letterSpacing": "0.06em" },
+      "body": { "family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "size": "16px", "lineHeight": "24px", "weight": 500, "letterSpacing": "0" },
+      "tell": { "family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "size": "13px", "lineHeight": "18px", "weight": 700, "letterSpacing": "0.01em" },
+      "caption": { "family": "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "size": "11px", "lineHeight": "14px", "weight": 700, "letterSpacing": "0.06em" }
+    },
+    "space": { "hairline": "1px", "xs": "4px", "sm": "8px", "md": "12px", "lg": "16px", "xl": "24px", "xxl": "32px" },
+    "radius": { "control": "10px", "panel": "16px", "card": "18px", "pill": "999px" },
+    "shadow": { "panel": "0 10px 28px rgba(0, 0, 0, 0.36)", "modal": "0 18px 48px rgba(0, 0, 0, 0.48)", "hiddenTension": "0 0 0 1px rgba(74, 150, 255, 0.42), 0 18px 48px rgba(47, 128, 237, 0.24), 0 14px 34px rgba(0, 0, 0, 0.46)" },
+    "motion": { "fast": "120ms", "standard": "180ms", "slow": "280ms", "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+    "touch": { "minimum": "44px" },
+    "breakpoint": { "compact": "360px", "mobile": "430px", "tablet": "768px", "desktop": "1024px" }
+  },
+  "component": {
+    "opponentReadBoard": { "mobileLayout": "fixed-grid", "mobileColumns": 3, "compactMinHeight": "108px", "gap": "4px", "noHorizontalScroll": true },
+    "opponentMiniPanel": { "background": "#121A2B", "border": "#2A3448", "radius": "16px", "padding": "8px", "minTouchTarget": "44px" },
+    "tellMeter": { "snapColor": "#4A96FF", "steadyColor": "#AAB6CC", "tankColor": "#F5B84B", "panicColor": "#FF5C7A", "waverColor": "#9B6CFF", "pattern": "color-icon-pattern" },
+    "signalBubble": { "background": "#1B2740", "text": "#F4F7FB", "radius": "10px", "minHeight": "24px" },
+    "hiddenNotMe": { "background": "#070A12", "border": "#4A96FF", "shadow": "0 0 0 1px rgba(74, 150, 255, 0.42), 0 18px 48px rgba(47, 128, 237, 0.24), 0 14px 34px rgba(0, 0, 0, 0.46)", "pattern": "noise-mask" },
+    "actionBar": { "height": "72px", "buttonMinHeight": "44px", "primaryColor": "#2F80ED", "radius": "16px" },
+    "actionRevealStrip": { "background": "#121A2B", "radius": "16px", "gap": "8px" },
+    "showdownReview": { "background": "#0B1020", "radius": "24px", "shadow": "0 18px 48px rgba(0, 0, 0, 0.48)" }
+  }
+}

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Card Game UI Design System Preview</title>
+  <style>
+    :root {
+      --backgroundCanvas: #070A12;
+      --backgroundSurface: #101624;
+      --backgroundRaised: #182133;
+      --borderSubtle: #2A3448;
+      --textPrimary: #F4F7FB;
+      --textSecondary: #AAB6CC;
+      --textMuted: #6F7C95;
+      --accentCta: #2F80ED;
+      --accentCtaHover: #4A96FF;
+      --danger: #FF5C7A;
+      --success: #4CD7A3;
+      --warning: #F5B84B;
+      --arcane: #9B6CFF;
+      --fontFamilySans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --fontFamilyDisplay: Cinzel, Georgia, 'Times New Roman', serif;
+      --space-0: 0px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 48px;
+      --space-8: 64px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-card: 18px;
+      --radius-pill: 999px;
+      --shadow-none: none;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+      --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.36);
+      --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.48);
+      --shadow-cardLift: 0 20px 60px rgba(47, 128, 237, 0.22), 0 12px 34px rgba(0, 0, 0, 0.46);
+      --motion-fast: 120ms;
+      --motion-standard: 180ms;
+      --motion-slow: 280ms;
+      --motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+      --touchTargetMinimum: 44px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 0%, rgba(47, 128, 237, 0.22), transparent 32%), var(--backgroundCanvas);
+      color: var(--textPrimary);
+      font-family: var(--fontFamilySans);
+      line-height: 1.5;
+      padding: var(--space-6);
+    }
+    header, section { max-width: 1180px; margin: 0 auto var(--space-7); }
+    h1 { font: 700 40px/48px var(--fontFamilyDisplay); letter-spacing: -0.02em; margin: 0 0 var(--space-3); }
+    h2 { font: 700 28px/36px var(--fontFamilySans); letter-spacing: -0.01em; margin: 0 0 var(--space-4); }
+    p { color: var(--textSecondary); margin: 0 0 var(--space-4); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
+    .panel { background: rgba(16, 22, 36, 0.86); border: 1px solid var(--borderSubtle); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: var(--space-5); }
+    .swatch { min-height: 118px; border-radius: var(--radius-lg); border: 1px solid rgba(244, 247, 251, 0.12); padding: var(--space-3); display: flex; flex-direction: column; justify-content: end; box-shadow: var(--shadow-sm); }
+    .swatch strong { color: var(--textPrimary); }
+    .swatch span { color: var(--textSecondary); font-size: 12px; line-height: 16px; }
+    .type-sample { border-bottom: 1px solid var(--borderSubtle); padding: var(--space-3) 0; }
+    .display { font: 700 40px/48px var(--fontFamilyDisplay); letter-spacing: -0.02em; }
+    .title { font: 700 28px/36px var(--fontFamilySans); letter-spacing: -0.01em; }
+    .card-name { font: 700 18px/24px var(--fontFamilySans); letter-spacing: 0.01em; }
+    .body { font: 500 16px/24px var(--fontFamilySans); }
+    .effect { font: 500 13px/19px var(--fontFamilySans); letter-spacing: 0.01em; }
+    .caption { font: 600 12px/16px var(--fontFamilySans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--textSecondary); }
+    .button-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+    .btn { min-height: var(--touchTargetMinimum); padding: 0 var(--space-5); border-radius: var(--radius-md); border: 1px solid transparent; color: var(--textPrimary); font-weight: 700; cursor: pointer; transition: transform var(--motion-fast) var(--motion-easing), background var(--motion-standard) var(--motion-easing), border var(--motion-standard) var(--motion-easing); }
+    .btn.default { background: var(--accentCta); }
+    .btn.hover { background: var(--accentCtaHover); }
+    .btn.active { background: #2367C4; transform: translateY(1px); }
+    .btn.disabled { background: var(--backgroundRaised); color: var(--textMuted); opacity: 0.48; cursor: not-allowed; }
+    .card-demo { width: 260px; background: linear-gradient(180deg, rgba(24,33,51,0.96), var(--backgroundSurface)); border: 1px solid var(--borderSubtle); border-radius: var(--radius-card); box-shadow: var(--shadow-cardLift); padding: var(--space-3); }
+    .art { height: 148px; border-radius: var(--radius-lg); background: radial-gradient(circle at 50% 25%, rgba(155,108,255,0.8), transparent 24%), linear-gradient(135deg, #1B2944, #090B14 58%, #2F80ED); display: grid; place-items: center; margin-bottom: var(--space-3); overflow: hidden; }
+    .art::before { content: "✦"; font-size: 64px; color: rgba(244,247,251,0.82); }
+    .stats { display: flex; justify-content: space-between; gap: var(--space-2); margin: var(--space-2) 0; }
+    .badge { min-width: 44px; min-height: 44px; border-radius: var(--radius-pill); display: grid; place-items: center; font-weight: 800; border: 1px solid rgba(244,247,251,0.16); }
+    .cost { background: var(--accentCta); }
+    .hp { background: var(--danger); }
+    .effect-box { background: rgba(7,10,18,0.72); border: 1px solid var(--borderSubtle); border-radius: var(--radius-md); padding: var(--space-3); }
+    .indicator-row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+    .indicator { min-height: 44px; border-radius: var(--radius-pill); padding: 0 var(--space-4); display: inline-flex; align-items: center; gap: var(--space-2); border: 1px solid var(--borderSubtle); }
+    .damage { background: repeating-linear-gradient(45deg, rgba(255,92,122,0.28), rgba(255,92,122,0.28) 6px, rgba(255,92,122,0.08) 6px, rgba(255,92,122,0.08) 12px); }
+    .heal { background: radial-gradient(circle, rgba(76,215,163,0.24) 2px, transparent 3px); background-size: 12px 12px; }
+    .arcane { background: radial-gradient(circle at center, rgba(155,108,255,0.28), rgba(155,108,255,0.08)); }
+    .modal { background: var(--backgroundSurface); border: 1px solid var(--borderSubtle); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: var(--space-5); max-width: 420px; }
+    .tooltip { display: inline-block; background: var(--backgroundRaised); color: var(--textPrimary); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); padding: var(--space-2) var(--space-3); font-size: 13px; line-height: 19px; }
+    .spacing-row { display: flex; align-items: end; gap: var(--space-3); flex-wrap: wrap; }
+    .space-chip { background: var(--backgroundRaised); border: 1px solid var(--borderSubtle); border-radius: var(--radius-sm); padding: var(--space-2); }
+    @media (max-width: 768px) { body { padding: var(--space-4); } h1 { font-size: 32px; line-height: 40px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="caption">Design System Preview</p>
+    <h1>Dark Cinematic Card Game UI</h1>
+    <p>Catalog for color tokens, type scale, controls, depth, and a playable-card composition with fixed reading order.</p>
+  </header>
+
+  <section class="panel">
+    <h2>Color Tokens</h2>
+    <div class="grid">
+      <div class="swatch" style="background:#070A12"><strong>backgroundCanvas</strong><span>#070A12</span></div>
+      <div class="swatch" style="background:#101624"><strong>backgroundSurface</strong><span>#101624</span></div>
+      <div class="swatch" style="background:#182133"><strong>backgroundRaised</strong><span>#182133</span></div>
+      <div class="swatch" style="background:#2A3448"><strong>borderSubtle</strong><span>#2A3448</span></div>
+      <div class="swatch" style="background:#F4F7FB; color:#070A12"><strong style="color:#070A12">textPrimary</strong><span style="color:#182133">#F4F7FB</span></div>
+      <div class="swatch" style="background:#AAB6CC; color:#070A12"><strong style="color:#070A12">textSecondary</strong><span style="color:#182133">#AAB6CC</span></div>
+      <div class="swatch" style="background:#6F7C95"><strong>textMuted</strong><span>#6F7C95</span></div>
+      <div class="swatch" style="background:#2F80ED"><strong>accentCta</strong><span>#2F80ED</span></div>
+      <div class="swatch" style="background:#4A96FF"><strong>accentCtaHover</strong><span>#4A96FF</span></div>
+      <div class="swatch" style="background:#FF5C7A"><strong>danger</strong><span>#FF5C7A</span></div>
+      <div class="swatch" style="background:#4CD7A3; color:#07120E"><strong style="color:#07120E">success</strong><span style="color:#07120E">#4CD7A3</span></div>
+      <div class="swatch" style="background:#F5B84B; color:#130E05"><strong style="color:#130E05">warning</strong><span style="color:#130E05">#F5B84B</span></div>
+      <div class="swatch" style="background:#9B6CFF"><strong>arcane</strong><span>#9B6CFF</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Typography</h2>
+    <div class="type-sample display">Display 40 / 48</div>
+    <div class="type-sample title">Title 28 / 36</div>
+    <div class="type-sample card-name">Card Name 18 / 24</div>
+    <div class="type-sample body">Body text 16 / 24 for readable interface copy.</div>
+    <div class="type-sample effect">Effect text 13 / 19 remains readable inside dense cards.</div>
+    <div class="type-sample caption">Caption 12 / 16</div>
+  </section>
+
+  <section class="panel">
+    <h2>Buttons: Four States</h2>
+    <div class="button-row">
+      <button class="btn default">Default</button>
+      <button class="btn hover">Hover</button>
+      <button class="btn active">Active</button>
+      <button class="btn disabled" disabled>Disabled</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Card, Modal, Tooltip, Spacing</h2>
+    <div class="grid">
+      <article class="card-demo" aria-label="Sample card">
+        <div class="art" aria-label="Card art"></div>
+        <div class="card-name">Astral Vanguard</div>
+        <div class="stats"><span class="badge cost">3</span><span class="badge hp">7</span></div>
+        <div class="effect-box effect">When revealed, shield an ally. If you control an Arcane pattern, draw one tactic.</div>
+      </article>
+      <div>
+        <div class="modal">
+          <p class="caption">Modal default</p>
+          <h2>Confirm Turn</h2>
+          <p>Stable shell with action descendants handling hover, active, and disabled states.</p>
+          <button class="btn default">Confirm</button>
+        </div>
+        <p style="margin-top:16px"><span class="tooltip">Tooltip default / hover / tap-pinned help</span></p>
+      </div>
+      <div>
+        <p class="caption">Redundant State Encoding</p>
+        <div class="indicator-row">
+          <span class="indicator damage">⚔ Damage</span>
+          <span class="indicator heal">✚ Heal</span>
+          <span class="indicator arcane">✦ Arcane</span>
+        </div>
+        <p style="margin-top:16px" class="caption">Spacing Scale</p>
+        <div class="spacing-row">
+          <span class="space-chip">4</span><span class="space-chip">8</span><span class="space-chip">12</span><span class="space-chip">16</span><span class="space-chip">24</span><span class="space-chip">32</span><span class="space-chip">48</span><span class="space-chip">64</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
