@@ -126,6 +126,25 @@ body::before {
   position: relative;
   z-index: 20;
 }
+.app--game .app__header,
+.app--onlineGame .app__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: max(8px, env(safe-area-inset-top)) 14px 0;
+  opacity: 0.42;
+  pointer-events: none;
+}
+.app--game .app__header .btn,
+.app--onlineGame .app__header .btn {
+  pointer-events: auto;
+}
+.app--game .app__brand,
+.app--onlineGame .app__brand {
+  transform: scale(0.82);
+  transform-origin: left center;
+}
 .app__brand {
   font-family: var(--font-display);
   font-weight: 800;
@@ -138,7 +157,7 @@ body::before {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 0 0 max(12px, env(safe-area-inset-bottom));
   min-height: 0;
 }
 .app__log {
@@ -470,6 +489,14 @@ body::before {
   font-weight: 700;
   letter-spacing: 0.08em;
 }
+.title__primaryActions {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
 .title__linkRow {
   display: flex;
   gap: 8px;
@@ -715,8 +742,9 @@ body::before {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 0 12px 6px;
+  padding: max(10px, env(safe-area-inset-top)) 12px 8px;
   animation: arenaIn 0.5s ease both;
+  isolation: isolate;
 }
 @keyframes arenaIn {
   from {
@@ -791,6 +819,46 @@ body::before {
   letter-spacing: 0.14em;
   box-shadow: 0 4px 10px rgba(160, 30, 50, 0.4);
 }
+.arena__phaseHud {
+  position: relative;
+  z-index: 6;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 20px);
+  margin: -6px 0 4px;
+  padding: 6px 12px 6px 7px;
+  border: 1.5px solid rgba(255, 230, 162, 0.38);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(20, 12, 44, 0.76), rgba(64, 35, 115, 0.58));
+  box-shadow: 0 8px 22px rgba(12, 7, 32, 0.22);
+  animation: phaseHudIn 0.28s ease backwards;
+}
+.arena__phaseKicker {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #5c3505;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+.arena__phaseText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fff;
+  font-size: clamp(0.62rem, 2.7vw, 0.72rem);
+  font-weight: 800;
+}
+@keyframes phaseHudIn {
+  from {
+    transform: translateY(-8px) scale(0.96);
+    opacity: 0;
+  }
+}
 
 /* 卓の向こう側：対戦相手のアーチ配置 */
 .arena__opponents {
@@ -801,6 +869,7 @@ body::before {
   justify-content: space-between;
   gap: 4px;
   padding: 2px 4px 0;
+  transition: transform 0.28s ease, opacity 0.28s ease, filter 0.28s ease;
 }
 .arena__opponents > .oppo:nth-child(2) {
   transform: translateY(-6px) scale(1.03);
@@ -817,6 +886,33 @@ body::before {
   justify-content: center;
   gap: 8px;
   min-height: 0;
+  transition: transform 0.28s ease, filter 0.28s ease;
+}
+.arena--phase-decision1 .arena__center,
+.arena--phase-decision2 .arena__center {
+  transform: translateY(4px) scale(1.05);
+  filter: drop-shadow(0 10px 22px rgba(255, 230, 162, 0.18));
+}
+.arena--phase-decision1 .arena__opponents,
+.arena--phase-decision2 .arena__opponents {
+  transform: translateY(-6px) scale(0.94);
+  opacity: 0.78;
+}
+.arena--phase-exchange .arena__center {
+  transform: scale(0.92);
+  opacity: 0.76;
+}
+.arena--phase-exchange .oppo__notMe {
+  animation: stealCandidatePulse 1.25s ease-in-out infinite;
+}
+@keyframes stealCandidatePulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(255, 206, 84, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(255, 206, 84, 0.72));
+  }
 }
 .arena__centerLabel {
   font-size: 0.68rem;
@@ -834,6 +930,7 @@ body::before {
   border-radius: 999px;
   padding: 5px 16px;
   box-shadow: var(--shadow-flat-sm);
+  animation: potPulse 0.32s ease backwards;
 }
 .arena__potLabel {
   font-size: 0.66rem;
@@ -847,6 +944,15 @@ body::before {
   color: #fff;
   font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 4px rgba(90, 40, 10, 0.5);
+}
+@keyframes potPulse {
+  0% {
+    transform: scale(0.92);
+    filter: brightness(1.4);
+  }
+  70% {
+    transform: scale(1.08);
+  }
 }
 .arena__community {
   display: flex;
@@ -877,6 +983,19 @@ body::before {
   gap: 8px;
   padding-top: 4px;
   transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.arena--phase-decision1 .arena__hero,
+.arena--phase-decision2 .arena__hero {
+  transform: translateY(-2px) scale(1.02);
+}
+.arena--phase-exchange .arena__heroCard--notme {
+  animation: notMeQuestionPulse 1.15s ease-in-out infinite;
+}
+@keyframes notMeQuestionPulse {
+  50% {
+    transform: translateY(-12px) scale(1.1);
+    filter: drop-shadow(0 0 22px rgba(176, 123, 255, 0.8));
+  }
 }
 .arena__hero--folded {
   opacity: 0.45;
@@ -931,6 +1050,9 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 .arena__heroHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: rgba(176, 123, 255, 0.35);
   border: 1.5px solid rgba(200, 170, 255, 0.6);
   color: #fff;
@@ -938,6 +1060,12 @@ body::before {
   border-radius: 999px;
   font-weight: 700;
   font-size: 0.76rem;
+}
+.arena__heroHintKey {
+  color: var(--gold-hi);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
 }
 .arena__heroCards {
   display: flex;
@@ -947,6 +1075,19 @@ body::before {
 }
 .arena__heroCard {
   filter: drop-shadow(0 10px 16px rgba(24, 10, 44, 0.55));
+  animation: heroCardDeal 0.46s cubic-bezier(0.2, 1.45, 0.4, 1) backwards;
+}
+.arena__heroCard:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.arena__heroCard:nth-child(3) {
+  animation-delay: 0.16s;
+}
+@keyframes heroCardDeal {
+  from {
+    transform: translateY(42px) rotate(0deg) scale(0.84);
+    opacity: 0;
+  }
 }
 .arena__heroCard--l {
   transform: rotate(-7deg) translateY(6px);
@@ -1046,6 +1187,19 @@ body::before {
   align-items: center;
   gap: 4px;
   transition: transform 0.25s ease, opacity 0.25s ease;
+  animation: seatFloatIn 0.34s ease backwards;
+}
+.oppo:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.oppo:nth-child(3) {
+  animation-delay: 0.16s;
+}
+@keyframes seatFloatIn {
+  from {
+    transform: translateY(-14px) scale(0.94);
+    opacity: 0;
+  }
 }
 .oppo--folded {
   opacity: 0.4;
@@ -1099,31 +1253,79 @@ body::before {
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
 }
+.oppo__status {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 1px 5px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--gold-hi);
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
 .oppo__cards {
   display: flex;
-  gap: 2px;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
 }
-.oppo__cards > .card:nth-child(1) {
-  transform: rotate(-3deg);
+.oppo__hiddenStack {
+  position: relative;
+  width: 34px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  opacity: 0.62;
 }
-.oppo__cards > .card:nth-child(3) {
-  transform: rotate(3deg);
-}
-.oppo__emote {
+.oppo__hiddenStack .card:first-child {
   position: absolute;
-  bottom: calc(100% + 2px);
+  transform: translateX(-5px) rotate(-7deg) scale(0.82);
+}
+.oppo__hiddenStack .card:nth-child(2) {
+  position: absolute;
+  transform: translateX(5px) rotate(7deg) scale(0.82);
+}
+.oppo__hiddenStack span {
+  position: absolute;
+  bottom: -9px;
   left: 50%;
   transform: translateX(-50%);
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.46rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.oppo__notMe {
+  position: relative;
+  transform: rotate(2deg);
+}
+.oppo__notMe > span {
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #5c3505;
+  font-size: 0.46rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.oppo__emote {
+  position: static;
+  transform: none;
   background: #fff;
   color: #2c2050;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   line-height: 1.35;
   padding: 4px 8px;
-  border-radius: 9px;
+  border-radius: 10px;
   box-shadow: var(--shadow-flat-sm);
-  width: max-content;
-  max-width: 110px;
+  width: auto;
+  max-width: 106px;
   text-align: center;
   z-index: 6;
   animation: bubblePop 0.22s ease backwards;
@@ -1131,11 +1333,12 @@ body::before {
 .oppo__emote::after {
   content: '';
   position: absolute;
-  top: 100%;
+  bottom: -5px;
   left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: #fff;
 }
 .oppo__foldedBadge {
   position: absolute;
@@ -1443,13 +1646,18 @@ body::before {
 /* ---------- Action bar：盤面手前の浮遊コントロール ---------- */
 
 .actionbar {
-  position: relative;
+  position: sticky;
+  bottom: max(8px, env(safe-area-inset-bottom));
   z-index: 10;
-  margin: 8px 12px 0;
-  background: rgba(20, 12, 44, 0.5);
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  margin: 6px 10px max(4px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(100% 120% at 50% 0%, rgba(255, 230, 162, 0.14), transparent 42%),
+    rgba(20, 12, 44, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 230, 162, 0.25);
   border-radius: var(--radius);
-  padding: 12px 14px 14px;
+  padding: 10px 12px 12px;
   text-align: center;
   box-shadow: var(--shadow-flat);
   animation: barIn 0.3s ease backwards;
@@ -1467,20 +1675,33 @@ body::before {
   color: var(--ink-dim);
 }
 .actionbar__prompt {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 0.88rem;
   font-weight: 800;
   color: #fff;
+}
+.actionbar__heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.actionbar__kicker {
+  color: var(--gold-hi);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
 }
 .actionbar--waiting .actionbar__prompt {
   margin: 0;
   color: var(--ink-dim);
 }
 .actionbar__row {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 .actionbar__bets {
   display: grid;
@@ -1491,16 +1712,43 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
-  padding: 11px 6px;
-  font-size: 0.9rem;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 8px 5px;
+  font-size: 0.82rem;
   letter-spacing: 0.02em;
+}
+.actionbar__commandBtn {
+  display: flex;
+  min-height: 76px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px;
+  line-height: 1.35;
+}
+.actionbar__targetBtn {
+  display: flex;
+  min-height: 98px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
 }
 .actionbar__betAmt {
   font-size: 0.66rem;
   font-weight: 800;
   opacity: 0.85;
   font-variant-numeric: tabular-nums;
+}
+.actionbar__help {
+  font-size: clamp(0.5rem, 2.3vw, 0.58rem);
+  line-height: 1.3;
+  font-weight: 800;
+  opacity: 0.78;
 }
 
 /* ---------- せーの！バナー ---------- */
@@ -1953,8 +2201,14 @@ body::before {
 }
 .result__actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
   margin-top: 10px;
+  max-width: 360px;
+}
+.result__actions .btn {
+  flex: 1 1 145px;
 }
 .result__chipDelta {
   display: flex;
@@ -2437,6 +2691,21 @@ body::before {
   font-weight: 800;
   color: #fff;
   font-size: 0.9rem;
+}
+.online__spinner {
+  width: 58px;
+  height: 58px;
+  align-self: center;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.16);
+  border-top-color: var(--gold-hi);
+  box-shadow: 0 0 24px rgba(255, 230, 162, 0.35);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (min-width: 540px) {
