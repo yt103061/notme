@@ -55,7 +55,13 @@ export function Table({
   }
 
   function rectFor(seat: number | 'center'): DOMRect | null {
-    if (seat === 'center') return centerAnchorRef.current?.getBoundingClientRect() ?? null;
+    if (seat === 'center') {
+      const rect = centerAnchorRef.current?.getBoundingClientRect();
+      if (!rect) return null;
+      const width = 52;
+      const height = 74;
+      return new DOMRect(rect.left + rect.width / 2 - width / 2, rect.top + rect.height / 2 - height / 2, width, height);
+    }
     return notMeRefs.current.get(seat)?.getBoundingClientRect() ?? null;
   }
 

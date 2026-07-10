@@ -3216,3 +3216,72 @@ body::before {
   color: #AAB6CC;
   white-space: nowrap;
 }
+
+/* Ranking segmentation: category and period filters */
+.ranking__sheet {
+  background: linear-gradient(180deg, rgba(18, 26, 43, 0.98), rgba(5, 7, 13, 0.98));
+  color: #F4F7FB;
+  border: 1px solid rgba(74, 150, 255, 0.26);
+  box-shadow: var(--shadow-pop);
+}
+.ranking__header {
+  border-bottom-color: rgba(74, 150, 255, 0.18);
+}
+.ranking__kicker {
+  margin: 0 0 2px;
+  color: #4A96FF;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+.ranking__title {
+  color: #F4F7FB;
+}
+.ranking__filters,
+.ranking__periods {
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px 0;
+}
+.ranking__filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ranking__periods {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ranking__filter,
+.ranking__period {
+  min-height: 44px;
+  border: 1px solid rgba(170, 182, 204, 0.22);
+  border-radius: 12px;
+  background: rgba(27, 39, 64, 0.72);
+  color: #AAB6CC;
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.ranking__filter--active,
+.ranking__period--active {
+  background: rgba(47, 128, 237, 0.22);
+  border-color: rgba(74, 150, 255, 0.62);
+  color: #F4F7FB;
+  box-shadow: 0 8px 18px rgba(47, 128, 237, 0.18);
+}
+.ranking__row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'rank name chips'
+    'rank games chips';
+  align-items: center;
+  background: rgba(18, 26, 43, 0.82);
+  border: 1px solid rgba(42, 52, 72, 0.9);
+}
+.ranking__row--top {
+  background: rgba(47, 128, 237, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(74, 150, 255, 0.5);
+}
+.ranking__rank { grid-area: rank; color: #4A96FF; }
+.ranking__name { grid-area: name; color: #F4F7FB; }
+.ranking__games { grid-area: games; color: #AAB6CC; }
+.ranking__chips { grid-area: chips; color: #F4F7FB; }
