@@ -5,6 +5,12 @@ export const APP_SUBTITLE = 'ノットミー';
 export const HOOK_LINE = '自分のカード、1枚だけ見えないポーカー。';
 
 export const TITLE_START = 'はじめる';
+export const TITLE_START_AI = 'すぐ遊ぶ（AI戦）';
+export const TITLE_RANDOM_MATCH = 'ランダム対戦';
+export const TITLE_FRIEND_MATCH = '友だちと対戦';
+export const TITLE_START_AI_DESC = 'ひとりで読み合いを練習';
+export const TITLE_RANDOM_MATCH_DESC = 'コードなしで対人マッチ';
+export const TITLE_FRIEND_MATCH_DESC = 'ルームコードで集合';
 export const TITLE_RULES_BLURB =
   '手札2枚と場札2枚は見える。でも「not me」1枚だけは自分に見えない。相手の反応から、自分の本当の強さを読め。';
 
@@ -47,6 +53,11 @@ export const ACCOUNT_PASSWORD_LABEL = 'パスワード（6文字以上）';
 // --- オンライン対戦（ルームコード） ---
 export const ONLINE_BUTTON = '🌐 オンライン対戦';
 export const ONLINE_TITLE = 'オンライン対戦';
+export const ONLINE_RANDOM_MATCH = 'ランダム対戦を探す';
+export const ONLINE_RANDOM_BLURB = 'コード入力なしで、待機中の相手と自動マッチします。';
+export const ONLINE_MATCHMAKING_BLURB = 'ランダム対戦の相手を探しています…';
+export const ONLINE_MATCHMAKING_INVITE = '待っている間、このコードで友だちを招待することもできます。';
+export const ONLINE_CANCEL_MATCHMAKING = 'マッチングをやめる';
 export const ONLINE_CREATE_ROOM = 'ルームを作る';
 export const ONLINE_JOIN_ROOM = 'ルームコードで参加';
 export const ONLINE_JOIN_BLURB = '相手から教えてもらった6文字のコードを入力してね。';
@@ -92,6 +103,16 @@ export const TUTORIAL_SKIP = 'スキップ';
 
 export const HAND_LABEL = (n: number, total: number) => `ハンド ${n} / ${total}`;
 export const SUDDEN_DEATH_BADGE = 'サドンデス';
+export const PHASE_DEAL_TITLE = '配札';
+export const PHASE_DEAL_BODY = '相手の反応とヒントから、自分のnot meを推理しよう';
+export const PHASE_BET1_TITLE = 'ベット1';
+export const PHASE_BET1_BODY = '場札1枚を見て、降りるか勝負するか決めよう';
+export const PHASE_EXCHANGE_TITLE = '交換';
+export const PHASE_EXCHANGE_BODY = '自分のnot meを変えるか、相手から奪うか選ぼう';
+export const PHASE_BET2_TITLE = 'ベット2';
+export const PHASE_BET2_BODY = '場札2枚が揃った。最後の賭けどころ';
+export const PHASE_SHOWDOWN_TITLE = 'ショーダウン';
+export const PHASE_SHOWDOWN_BODY = '見えなかった1枚を開いて勝敗を確認しよう';
 
 export const ACTION_FOLD = '降りる';
 export const ACTION_STAY = 'ステイ';
@@ -101,7 +122,18 @@ export const ACTION_EXCHANGE_DECK = '山札と交換';
 export const ACTION_EXCHANGE_STEAL = 'not meを奪う';
 export const ACTION_EXCHANGE_PASS = '交換しない';
 export const ACTION_BACK = 'もどる';
+export const ACTION_HOME = 'ホームへ';
 export const PICK_STEAL_TARGET = '誰から奪う？';
+export const ACTION_DOCK_DECISION_LABEL = 'コマンド';
+export const ACTION_FOLD_HELP = '損失を増やさず撤退';
+export const ACTION_STAY_HELP = '小さく参加';
+export const ACTION_RAISE_HELP = '強さを主張';
+export const ACTION_BIG_HELP = '最大圧でブラフも狙う';
+export const ACTION_DOCK_EXCHANGE_LABEL = 'not me アクション';
+export const ACTION_EXCHANGE_DECK_HELP = '自分のnot meを引き直し、ヒント更新';
+export const ACTION_EXCHANGE_STEAL_HELP = '相手の見えているnot meを奪う。手札ペナルティあり';
+export const ACTION_EXCHANGE_PASS_HELP = '状態を変えずに次へ';
+export const ACTION_TARGET_STEAL_HELP = 'このnot meを奪う';
 
 export const YOUR_TURN_DECIDE = 'いくら賭ける？（降りれば損失なし）';
 export const YOUR_TURN_EXCHANGE = 'あなたの番：not meを交換する？';
@@ -127,6 +159,7 @@ export const RESULT_TITLE = 'ゲーム結果';
 export const RESULT_WINNER = (name: string) => `${name} の勝利！`;
 export const RESULT_DRAW = '引き分け！';
 export const PLAY_AGAIN = 'もう一度あそぶ';
+export const PLAY_RANDOM_MATCH = 'ランダム対戦へ';
 export const SHARE_BUTTON = '結果をシェア';
 export const SHARE_TEXT = (chipDelta: number) =>
   `『not me』で${chipDelta >= 0 ? '+' : ''}${chipDelta}チップ！自分のカード、1枚だけ見えないポーカー、あなたも読み合ってみて。`;

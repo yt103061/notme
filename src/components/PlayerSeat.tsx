@@ -43,6 +43,7 @@ export function PlayerSeat({
           {AVATAR[player.id] ?? '🙂'}
         </span>
         <span className="oppo__name">{player.name}</span>
+        <span className="oppo__status">{player.folded ? 'FOLD' : isActingNow ? 'TURN' : player.staked > 0 ? `BET ${player.staked}` : 'WATCH'}</span>
         <span className="oppo__score">
           {S.CHIP_ICON}
           {player.stack}
@@ -50,10 +51,14 @@ export function PlayerSeat({
       </div>
 
       <div className="oppo__cards">
-        <CardView variant="hiddenOpponent" size="sm" />
-        <CardView variant="hiddenOpponent" size="sm" />
-        <div ref={notMeRef}>
+        <div className="oppo__hiddenStack" aria-label="相手の手札2枚">
+          <CardView variant="hiddenOpponent" size="xs" />
+          <CardView variant="hiddenOpponent" size="xs" />
+          <span>手札×2</span>
+        </div>
+        <div className="oppo__notMe" ref={notMeRef}>
           <CardView card={player.notMe} variant="faceUp" size="sm" highlighted />
+          <span>not me</span>
         </div>
       </div>
 

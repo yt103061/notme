@@ -105,7 +105,7 @@ export function OnlineGame({ roomId, seat, onExit }: OnlineGameProps) {
           ))}
         </div>
         <button className="btn btn--primary btn--large" onClick={onExit}>
-          {S.ACTION_BACK}
+          {S.ACTION_HOME}
         </button>
       </div>
     );
