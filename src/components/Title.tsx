@@ -130,14 +130,29 @@ export function Title({
 
       {canAfford ? (
         <div className="title__primaryActions">
-          <button className="btn btn--primary btn--large" onClick={onStart}>
-            {S.TITLE_START_AI}
+          <button className="title__modeCard title__modeCard--gold" onClick={onStart}>
+            <span className="title__modeIcon">⚡</span>
+            <span className="title__modeCopy">
+              <strong>{S.TITLE_START_AI}</strong>
+              <small>{S.TITLE_START_AI_DESC}</small>
+            </span>
+            <span className="title__modeArrow">›</span>
           </button>
-          <button className="btn btn--secondary btn--large" onClick={onOpenRandomOnline}>
-            {S.TITLE_RANDOM_MATCH}
+          <button className="title__modeCard title__modeCard--cyan" onClick={onOpenRandomOnline}>
+            <span className="title__modeIcon">🌐</span>
+            <span className="title__modeCopy">
+              <strong>{S.TITLE_RANDOM_MATCH}</strong>
+              <small>{S.TITLE_RANDOM_MATCH_DESC}</small>
+            </span>
+            <span className="title__modeArrow">›</span>
           </button>
-          <button className="btn btn--ghost" onClick={onOpenOnline}>
-            {S.TITLE_FRIEND_MATCH}
+          <button className="title__modeCard title__modeCard--glass" onClick={onOpenOnline}>
+            <span className="title__modeIcon">🤝</span>
+            <span className="title__modeCopy">
+              <strong>{S.TITLE_FRIEND_MATCH}</strong>
+              <small>{S.TITLE_FRIEND_MATCH_DESC}</small>
+            </span>
+            <span className="title__modeArrow">›</span>
           </button>
         </div>
       ) : (
