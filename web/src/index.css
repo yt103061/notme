@@ -1,0 +1,24 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+:root {
+  color-scheme: dark;
+  font: 15px/1.5 system-ui, "Hiragino Sans", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background: #0d0e13;
+  color: #e8e8ef;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+}

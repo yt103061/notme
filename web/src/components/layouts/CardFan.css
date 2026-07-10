@@ -1,0 +1,31 @@
+.card-fan {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 150px;
+  position: relative;
+}
+
+.card-fan--top {
+  align-items: flex-start;
+}
+
+.card-fan__item {
+  margin: 0 -14px;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), z-index 0s;
+  transform-origin: bottom center;
+  animation: card-fan-enter 0.4s ease-out;
+}
+
+@keyframes card-fan-enter {
+  from { opacity: 0; filter: brightness(1.6); }
+  to { opacity: 1; filter: brightness(1); }
+}
+
+.card-fan--top .card-fan__item {
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-fan__item { transition-duration: 0.1s; }
+}

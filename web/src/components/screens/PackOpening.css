@@ -1,0 +1,106 @@
+.pack-opening {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 640px;
+  gap: 24px;
+  padding: 24px;
+  background: radial-gradient(ellipse at 50% 30%, #23283f, #0d0e13 70%);
+  color: #e8e8ef;
+}
+
+.pack-opening__pack {
+  position: relative;
+  width: 220px;
+  height: 320px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.pack-opening__seal-left,
+.pack-opening__seal-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: linear-gradient(160deg, #6a4fd0, #2c1f66 75%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease;
+}
+
+.pack-opening__seal-left {
+  left: 0;
+  border-radius: 10px 0 0 10px;
+  transform: translateX(calc(var(--tear, 0) * -60px)) rotate(calc(var(--tear, 0) * -8deg));
+  transform-origin: bottom left;
+}
+
+.pack-opening__seal-right {
+  right: 0;
+  border-radius: 0 10px 10px 0;
+  transform: translateX(calc(var(--tear, 0) * 60px)) rotate(calc(var(--tear, 0) * 8deg));
+  transform-origin: bottom right;
+}
+
+.pack-opening__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 20px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  pointer-events: none;
+  opacity: calc(1 - var(--tear, 0));
+}
+
+.pack-opening__reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.pack-opening__current {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.pack-opening__current--glow {
+  animation: pack-glow 1.1s ease-in-out infinite;
+}
+
+@keyframes pack-glow {
+  0%, 100% { box-shadow: 0 0 20px 4px rgba(255, 220, 120, 0.15); }
+  50% { box-shadow: 0 0 46px 14px rgba(255, 220, 120, 0.45); }
+}
+
+.pack-opening__hint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pack-opening__collected {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 480px;
+}
+
+.pack-opening__collected-item {
+  animation: pack-collect-in 0.3s ease-out;
+}
+
+@keyframes pack-collect-in {
+  from { opacity: 0; transform: translateY(-16px) scale(0.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-opening__current--glow { animation-duration: 2.2s; }
+}

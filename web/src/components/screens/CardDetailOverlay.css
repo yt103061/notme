@@ -1,0 +1,44 @@
+.card-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.card-detail-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 6, 10, 0.72);
+  backdrop-filter: blur(10px);
+  animation: card-detail-fade 0.22s ease-out;
+}
+
+.card-detail-overlay__stage {
+  position: relative;
+  z-index: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.card-detail-overlay__stage .card-slot {
+  --card-w: 260px;
+}
+
+.card-detail-overlay__hint {
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+@keyframes card-detail-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
