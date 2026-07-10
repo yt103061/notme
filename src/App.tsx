@@ -83,6 +83,7 @@ export default function App() {
   const [rankingOpen, setRankingOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [onlineRoom, setOnlineRoom] = useState<{ roomId: string; seat: number } | null>(null);
+  const [onlineAutoMatch, setOnlineAutoMatch] = useState(false);
   const [showVS, setShowVS] = useState(false);
   const [chipBalance, setChipBalance] = useState(() => getBalance());
   const [dailyBonus, setDailyBonus] = useState<DailyBonusStatus>(() => getDailyBonusStatus());
@@ -320,6 +321,7 @@ export default function App() {
 
   function handleTitleStart() {
     sfx.play('tap');
+    analytics.track('home_start_ai');
     if (!canSitDown()) return;
     if (localStorage.getItem(TUTORIAL_SEEN_KEY)) startGame();
     else setScreen('tutorial');
@@ -498,6 +500,12 @@ export default function App() {
     startGame();
   }
 
+  function openOnlineLobby(autoMatch: boolean) {
+    analytics.track(autoMatch ? 'home_start_random_match' : 'home_start_online_room');
+    setOnlineAutoMatch(autoMatch);
+    setScreen('onlineLobby');
+  }
+
   function toggleMute() {
     setMuted((m) => {
       sfx.setMuted(!m);
@@ -568,7 +576,8 @@ export default function App() {
             onChangeAvatar={handleChangeAvatar}
             onOpenRanking={() => setRankingOpen(true)}
             onOpenAccount={() => setAccountOpen(true)}
-            onOpenOnline={() => setScreen('onlineLobby')}
+            onOpenOnline={() => openOnlineLobby(false)}
+            onOpenRandomOnline={() => openOnlineLobby(true)}
           />
         )}
         {screen === 'tutorial' && <Tutorial onFinish={handleTutorialFinish} />}
@@ -576,9 +585,14 @@ export default function App() {
         {screen === 'onlineLobby' && (
           <OnlineLobby
             displayName={displayName}
-            onBack={() => setScreen('title')}
+            onBack={() => {
+              setOnlineAutoMatch(false);
+              setScreen('title');
+            }}
+            autoMatch={onlineAutoMatch}
             onEnterGame={(roomId, seat) => {
               setOnlineRoom({ roomId, seat });
+              setOnlineAutoMatch(false);
               setScreen('onlineGame');
             }}
           />
@@ -635,6 +649,8 @@ export default function App() {
             canAfford={canSitDown()}
             dailyBonus={dailyBonus}
             onClaimBonus={handleClaimBonus}
+            onHome={() => setScreen('title')}
+            onRandomMatch={() => openOnlineLobby(true)}
           />
         )}
       </main>

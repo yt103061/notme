@@ -43,6 +43,17 @@ export function createOnlineRoom(displayName: string) {
   return call<{ roomId: string; code: string; seat: number }>({ action: 'create', displayName });
 }
 
+export function matchmakeOnlineRoom(displayName: string) {
+  return call<{
+    roomId: string;
+    code: string;
+    seat: number;
+    status: OnlineView['status'];
+    matched: boolean;
+    players: OnlinePlayerInfo[];
+  }>({ action: 'matchmake', displayName });
+}
+
 export function joinOnlineRoom(code: string, displayName: string) {
   return call<{ roomId: string; code: string; seat: number }>({ action: 'join', code, displayName });
 }

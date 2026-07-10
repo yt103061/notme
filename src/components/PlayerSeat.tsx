@@ -43,6 +43,7 @@ export function PlayerSeat({
           {AVATAR[player.id] ?? '🙂'}
         </span>
         <span className="oppo__name">{player.name}</span>
+        <span className="oppo__status">{player.folded ? 'FOLD' : isActingNow ? 'TURN' : player.staked > 0 ? `BET ${player.staked}` : 'WATCH'}</span>
         <span className="oppo__score">
           {S.CHIP_ICON}
           {player.stack}

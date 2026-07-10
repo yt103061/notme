@@ -4,6 +4,7 @@
 //
 // action で分岐するシンプルなディスパッチャ:
 //   create   : ルーム作成（コード発行、ホストとして着席）
+//   matchmake: 公開キューへ自動参加（必要なら作成し、2人以上で自動開始）
 //   join     : コードで参加（次の空席へ着席）
 //   start    : ハンド開始（ホストのみ。参加者2人以上で not me を配る）
 //   bet      : ①②の賭け選択を1人分投入
@@ -112,6 +113,124 @@ Deno.serve(async (req: Request) => {
     if (joinError) return json({ error: joinError.message }, 500);
 
     return json({ roomId: room.id, code: room.code, seat: 0 });
+  }
+
+  // ----- ランダムマッチング -----
+  if (action === 'matchmake') {
+    const displayName = String(body.displayName ?? 'プレイヤー').slice(0, 16);
+
+    const { data: myWaitingRooms, error: myWaitingErr } = await admin
+      .from('online_rooms')
+      .select('id, code, status, max_players, online_room_players!inner(seat, user_id, display_name)')
+      .eq('mode', 'queue')
+      .eq('status', 'waiting')
+      .eq('online_room_players.user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1);
+    if (myWaitingErr) return json({ error: myWaitingErr.message }, 500);
+
+    let room = myWaitingRooms?.[0] ?? null;
+    let seat = room?.online_room_players?.[0]?.seat ?? 0;
+
+    if (!room) {
+      const { data: candidates, error: candidateErr } = await admin
+        .from('online_rooms')
+        .select('*, online_room_players(seat, user_id, display_name)')
+        .eq('mode', 'queue')
+        .eq('status', 'waiting')
+        .order('created_at', { ascending: true })
+        .limit(8);
+      if (candidateErr) return json({ error: candidateErr.message }, 500);
+
+      for (const candidate of candidates ?? []) {
+        const players = candidate.online_room_players ?? [];
+        if (players.some((p) => p.user_id === user.id)) {
+          room = candidate;
+          seat = players.find((p) => p.user_id === user.id)!.seat;
+          break;
+        }
+        if (players.length >= candidate.max_players) continue;
+        const takenSeats = new Set(players.map((p) => p.seat));
+        seat = 0;
+        while (takenSeats.has(seat)) seat++;
+        const { error: joinError } = await admin
+          .from('online_room_players')
+          .insert({ room_id: candidate.id, user_id: user.id, seat, display_name: displayName });
+        if (!joinError) {
+          room = candidate;
+          break;
+        }
+        // 同時参加で席が埋まった場合は次候補へ進む
+        if (!String(joinError.message).includes('duplicate')) return json({ error: joinError.message }, 500);
+      }
+    }
+
+    if (!room) {
+      let created = null;
+      for (let attempt = 0; attempt < 5 && !created; attempt++) {
+        const code = generateRoomCode();
+        const { data, error } = await admin
+          .from('online_rooms')
+          .insert({ code, mode: 'queue', host_id: user.id, status: 'waiting' })
+          .select()
+          .single();
+        if (!error) created = data;
+        else if (!String(error.message).includes('duplicate')) return json({ error: error.message }, 500);
+      }
+      if (!created) return json({ error: 'room_code_collision' }, 500);
+
+      const { error: joinError } = await admin
+        .from('online_room_players')
+        .insert({ room_id: created.id, user_id: user.id, seat: 0, display_name: displayName });
+      if (joinError) return json({ error: joinError.message }, 500);
+      room = created;
+      seat = 0;
+    }
+
+    const { data: players, error: playersErr } = await admin
+      .from('online_room_players')
+      .select('seat, user_id, display_name')
+      .eq('room_id', room.id)
+      .order('seat', { ascending: true });
+    if (playersErr) return json({ error: playersErr.message }, 500);
+
+    let status = room.status;
+    if (status === 'waiting' && players.length >= 2) {
+      const { data: existingState, error: existingStateErr } = await admin
+        .from('online_room_states')
+        .select('room_id')
+        .eq('room_id', room.id)
+        .maybeSingle();
+      if (existingStateErr) return json({ error: existingStateErr.message }, 500);
+
+      if (!existingState) {
+        const seatNames: Record<number, string> = {};
+        for (const p of players) seatNames[p.seat] = p.display_name;
+        const match = initMatch(randomSeed(), seatNames);
+        const { error: stateErr } = await admin.from('online_room_states').insert({
+          room_id: room.id,
+          ...toRow(match),
+          version: 0,
+        });
+        if (stateErr) return json({ error: stateErr.message }, 500);
+      }
+
+      const { error: updateErr } = await admin
+        .from('online_rooms')
+        .update({ status: 'playing', updated_at: new Date().toISOString() })
+        .eq('id', room.id);
+      if (updateErr) return json({ error: updateErr.message }, 500);
+      status = 'playing';
+    }
+
+    return json({
+      roomId: room.id,
+      code: room.code,
+      seat,
+      status,
+      matched: status === 'playing',
+      players: players.map((p) => ({ seat: p.seat, displayName: p.display_name })),
+    });
   }
 
   // ----- コードで参加 -----

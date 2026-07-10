@@ -102,9 +102,13 @@ export function Table({
   }, [state.community.length]);
 
   const humanBadge = badgeFor(human.id);
+  const phaseCopy = phaseMeta(state.phase);
 
   return (
-    <div className="arena" key={`${state.handNumber}-${state.isSuddenDeath ? 'sd' : ''}`}>
+    <div
+      className={`arena arena--phase-${state.phase}`}
+      key={`${state.handNumber}-${state.isSuddenDeath ? 'sd' : ''}`}
+    >
       {/* 卓の面（奥に向かって沈む楕円フェルト）。カードやUIはこの上に平置きされる */}
       <div className="arena__felt" aria-hidden>
         <div className="arena__feltRim" />
@@ -115,6 +119,11 @@ export function Table({
       <div className="arena__topbar">
         <span className="arena__handLabel">{HAND_LABEL(state.handNumber, state.totalHands)}</span>
         {state.isSuddenDeath && <span className="arena__suddenDeath">{SUDDEN_DEATH_BADGE}</span>}
+      </div>
+
+      <div className="arena__phaseHud" aria-live="polite">
+        <span className="arena__phaseKicker">{phaseCopy.title}</span>
+        <span className="arena__phaseText">{phaseCopy.body}</span>
       </div>
 
       {/* 卓の向こう側に並ぶ対戦相手（円卓のアーチ状に配置） */}
@@ -134,7 +143,7 @@ export function Table({
 
       {/* 卓の中心のスポットライト：ポット＋共有の場札 */}
       <div className="arena__center" ref={centerAnchorRef}>
-        <div className="arena__pot">
+        <div className="arena__pot" key={state.pot}>
           <span className="arena__potLabel">{S.POT_LABEL}</span>
           <span className="arena__potValue">
             {S.CHIP_ICON} {state.pot}
@@ -222,6 +231,22 @@ export function Table({
   );
 }
 
+function phaseMeta(phase: GameState['phase']) {
+  switch (phase) {
+    case 'decision1':
+      return { title: S.PHASE_BET1_TITLE, body: S.PHASE_BET1_BODY };
+    case 'exchange':
+      return { title: S.PHASE_EXCHANGE_TITLE, body: S.PHASE_EXCHANGE_BODY };
+    case 'decision2':
+      return { title: S.PHASE_BET2_TITLE, body: S.PHASE_BET2_BODY };
+    case 'handEnd':
+    case 'gameEnd':
+      return { title: S.PHASE_SHOWDOWN_TITLE, body: S.PHASE_SHOWDOWN_BODY };
+    default:
+      return { title: S.PHASE_DEAL_TITLE, body: S.PHASE_DEAL_BODY };
+  }
+}
+
 /** あなたの名前・スタック・ヒントを表す浮遊チップ列 */
 function HeroInfo({ player, toast }: { player: PlayerState; toast?: string | null }) {
   return (
@@ -235,7 +260,12 @@ function HeroInfo({ player, toast }: { player: PlayerState; toast?: string | nul
       <span className="arena__heroScore">
         {S.CHIP_ICON} {player.stack}
       </span>
-      {player.hint && <span className="arena__heroHint">ヒント：{player.hint.label}</span>}
+      {player.hint && (
+        <span className="arena__heroHint">
+          <span className="arena__heroHintKey">封印ヒント</span>
+          {player.hint.label}
+        </span>
+      )}
       {toast && (
         <span key={toast} className="arena__heroToast">
           {toast}
